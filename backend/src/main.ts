@@ -25,9 +25,6 @@ async function bootstrap() {
   
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`Servidor corriendo en: http://localhost:${port}`);
-  console.log(`Endpoint de registro: POST http://localhost:${port}/api/auth/register`);
-  console.log(`Endpoint de login:    POST http://localhost:${port}/api/auth/login`);
 }
 
 bootstrap();
