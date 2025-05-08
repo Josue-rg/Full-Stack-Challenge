@@ -18,12 +18,12 @@ const HomePage: React.FC = () => {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-gray-900">Mi Aplicación</h1>
+                <h1 className="text-xl font-bold text-gray-900">WORDLE</h1>
               </div>
             </div>
             <div className="flex items-center">
               <span className="text-gray-700 mr-4">
-                Hola, {user?.name || 'Usuario'}
+                Hola, {user?.username}
               </span>
               <button
                 onClick={handleLogout}
