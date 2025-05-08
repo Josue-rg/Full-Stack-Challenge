@@ -5,15 +5,14 @@ import { authService } from '../services/api';
 
 interface User {
   id: string;
-  name: string;
-  email: string;
+  username: string;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -34,14 +33,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
 
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     try {
-      const data = await authService.login(email, password);
+      const data = await authService.login(username, password);
       localStorage.setItem('token', data.access_token);
       setUser({
-        id: data.user.id,
-        name: data.user.name,
-        email: data.user.email,
+        id: data.id, // Cambiado de data.user.id
+        username: data.username, // Cambiado de data.user.username
       });
       navigate('/');
     } catch (error) {
@@ -50,14 +48,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (username: string, password: string) => {
     try {
-      const data = await authService.register({ name, email, password });
-      localStorage.setItem('token', data.access_token);
+      await authService.register({ username, password });
+      const loginData = await authService.login(username, password);
+      localStorage.setItem('token', loginData.access_token);
       setUser({
-        id: data.user.id,
-        name: data.user.name,
-        email: data.user.email,
+        id: loginData.id,
+        username: loginData.username,
       });
       navigate('/');
     } catch (error) {

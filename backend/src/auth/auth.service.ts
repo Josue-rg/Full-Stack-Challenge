@@ -60,4 +60,12 @@ export class AuthService {
     const { password: hashedPassword, ...result } = user;
     return result;
   }
+
+  async getAllUsers() {
+    const users = await this.usersRepository.find();
+    return users.map(user => ({
+      id: user.id,
+      username: user.username
+    }));
+  }
 }

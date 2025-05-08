@@ -1,23 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-toastify';
+import { authService } from '../../services/api';
+
+interface User {
+  id: string;
+  username: string;
+}
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [users, setUsers] = useState<User[]>([]);
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const getAllUsers = async () => {
+      try {
+        const usersData = await authService.getAllUsers();
+        setUsers(usersData);
+      } catch {
+        setUsers([]);
+      }
+    };
+    getAllUsers();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    
+    if (!username.trim() || !password.trim()) {
+      toast.error('Por favor, completa todos los campos');
+      return;
+    }
+
+    const userExists = users.find(user => 
+      user.username.toLowerCase() === username.toLowerCase()
+    );
+    
+    if (!userExists) {
+      toast.error('El usuario no existe');
+      return;
+    }
     
     try {
-      await login(email, password);
+      await login(username, password);
       navigate('/');
-    } catch (err) {
-      setError('Credenciales incorrectas. Por favor, inténtalo de nuevo.');
+    } catch {
+      toast.error('Contraseña incorrecta');
     }
   };
 
@@ -30,28 +62,21 @@ const LoginPage: React.FC = () => {
           </h2>
         </div>
         
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">{error}</span>
-          </div>
-        )}
-        
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email-address" className="sr-only">
-                Correo electrónico
+              <label htmlFor="username" className="sr-only">
+                Nombre de usuario
               </label>
               <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
+                id="username"
+                name="username"
+                type="text"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Correo electrónico"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Nombre de usuario"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
             <div>
