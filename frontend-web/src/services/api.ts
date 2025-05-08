@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'http://localhost:3000';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -24,7 +24,10 @@ export const authService = {
   },
   
   register: async (userData: { name: string; email: string; password: string }) => {
-    const response = await api.post('/auth/register', userData);
+    const response = await api.post('/auth/register', {
+      username: userData.email, // Usamos el email como username
+      password: userData.password
+    });
     return response.data;
   },
 };

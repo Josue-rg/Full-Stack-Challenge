@@ -1,11 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Game } from './game.entity';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Win } from './win.entity';
 
 @Entity()
 export class Word {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ length: 5 })
   word: string;
@@ -13,16 +12,15 @@ export class Word {
   @Column({ default: false })
   used: boolean;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ nullable: true })
   usedAt: Date;
 
-  @OneToMany(() => Game, game => game.word)
-  games: Game[];
+  @CreateDateColumn()
+  createdAt: Date;
 
-  // Relación Uno a Muchos con la entidad Win
+  @UpdateDateColumn()
+  updatedAt: Date;
+
   @OneToMany(() => Win, win => win.word)
   wins: Win[];
-
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
 }

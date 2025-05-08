@@ -1,39 +1,23 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne } from 'typeorm';
 import { Game } from './game.entity';
-
-    export enum LetterStatus {
-        //posición correcta
-        CORRECT = 1,
-        //posición incorrecta
-        WRONG_POSITION = 2,
-        //no esta en la palabra
-        NOT_IN_WORD = 3
-    }
 
 @Entity()
 export class Attempt {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @ManyToOne(() => Game, game => game.attemptsList)
-  @JoinColumn({ name: 'gameId' })
-  game: Game;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
-  gameId: string;
+  gameId: number;
 
-  @Column({ length: 5 })
+  @Column()
   word: string;
 
-  @Column('jsonb')
-  result: Array<{
-    letter: string;
-    value: LetterStatus;
-  }>;
+  @Column('text')
+  result: string;
 
-  @Column({ type: 'boolean' })
-  isCorrect: boolean;
-
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn()
   createdAt: Date;
+
+  @ManyToOne(() => Game, game => game.attempts)
+  game: Game;
 }
