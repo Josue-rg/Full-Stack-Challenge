@@ -52,6 +52,10 @@ export class WordsService {
     }
   }
 
+  async getAllWords(): Promise<Word[]> {
+    return this.wordsRepository.find();
+  }
+
   getCurrentWord(): Word {
     if (!this.currentWord) {
       throw new NotFoundException('No hay palabra seleccionada actualmente');

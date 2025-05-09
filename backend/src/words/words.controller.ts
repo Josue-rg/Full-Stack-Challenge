@@ -11,6 +11,11 @@ export class WordsController {
     return this.wordsService.addWord(body.word);
   }
 
+  @Get()
+  async getAllWords() {
+    return this.wordsService.getAllWords();
+  }
+
   @Get('current')
   @UseGuards(JwtAuthGuard)
   getCurrentWord() {
