@@ -12,7 +12,6 @@ async function bootstrap() {
     credentials: true,
   });
   
-  //configuracion global para la API
   app.setGlobalPrefix('api');
   
   app.useGlobalPipes(

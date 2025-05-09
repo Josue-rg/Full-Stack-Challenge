@@ -9,6 +9,7 @@ import { Attempt } from './entities/attempt.entity';
 import { User } from './entities/user.entity';
 import { Win } from './entities/win.entity';
 import { AuthModule } from './auth/auth.module';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { AuthModule } from './auth/auth.module';
     ScheduleModule.forRoot(),
     WordsModule,
     GameModule,
-    AuthModule
+    AuthModule,
+    StatsModule
   ],
 })
 export class AppModule {}

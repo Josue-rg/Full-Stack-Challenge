@@ -8,7 +8,7 @@ export class Game {
   id: number;
 
   @Column()
-  userId: number;
+  userId: string;
 
   @Column({ default: false })
   completed: boolean;
