@@ -3,7 +3,6 @@ import { WordsService } from './words.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('words')
-@UseGuards(JwtAuthGuard)
 export class WordsController {
   constructor(private readonly wordsService: WordsService) {}
 
@@ -13,11 +12,13 @@ export class WordsController {
   }
 
   @Get('current')
+  @UseGuards(JwtAuthGuard)
   getCurrentWord() {
     return this.wordsService.getCurrentWord();
   }
 
   @Get('next-word-time')
+  @UseGuards(JwtAuthGuard)
   getTimeUntilNextWord() {
     return {
       timeRemaining: this.wordsService.getTimeUntilNextWord()
