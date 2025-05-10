@@ -40,4 +40,9 @@ export const authService = {
   }
 };
 
+export const guessWordService = async (word: string) => {
+  const response = await api.post('/guess', { word });
+  return response.data;
+};
+
 export default api;
