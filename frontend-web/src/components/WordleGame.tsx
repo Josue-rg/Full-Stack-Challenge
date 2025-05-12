@@ -100,6 +100,10 @@ const formatTime = (ms: number) => {
   return `${minutes}:${seconds}`;
 };
 
+const winSound = new Audio('/sounds/victoria.mp3');
+const loseSound = new Audio('/sounds/derrota.mp3');
+const timeoutSound = new Audio('/sounds/timeout.mp3');
+
 const WordleGame: React.FC = () => {
   const [attempts, setAttempts] = useState<LetterFeedback[][]>([]);
   const [currentWord, setCurrentWord] = useState('');
@@ -121,6 +125,14 @@ const WordleGame: React.FC = () => {
         if (prev > 1000) return prev - 1000;
         // Si el contador llega a cero, reinicia el estado del juego
         if (prev <= 1000 && lastTime !== 0) {
+          // Detén cualquier sonido anterior
+          winSound.pause();
+          winSound.currentTime = 0;
+          loseSound.pause();
+          loseSound.currentTime = 0;
+          // Suena timeout
+          timeoutSound.currentTime = 0;
+          timeoutSound.play();
           setAttempts([]);
           setCurrentWord('');
           setSuccess(false);
@@ -150,9 +162,13 @@ const WordleGame: React.FC = () => {
       if (result.every((l: any) => l.value === 1)) {
         setSuccess(true);
         toast.success('¡Felicidades! ¡Palabra correcta!');
+        winSound.currentTime = 0;
+        winSound.play();
       }
       if (attempts.length + 1 >= MAX_ATTEMPTS && !result.every((l: any) => l.value === 1)) {
         toast.error('¡Has alcanzado el máximo de intentos!');
+        loseSound.currentTime = 0;
+        loseSound.play();
       }
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Error al enviar intento';
@@ -190,6 +206,12 @@ const WordleGame: React.FC = () => {
         <button
           className="mt-2 px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-900"
           onClick={() => {
+            winSound.pause();
+            winSound.currentTime = 0;
+            loseSound.pause();
+            loseSound.currentTime = 0;
+            timeoutSound.pause();
+            timeoutSound.currentTime = 0;
             setAttempts([]);
             setCurrentWord('');
             setSuccess(false);
