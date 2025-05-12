@@ -155,7 +155,12 @@ const WordleGame: React.FC = () => {
         toast.error('¡Has alcanzado el máximo de intentos!');
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Error al enviar intento');
+      const msg = err?.response?.data?.message || 'Error al enviar intento';
+      if (msg.toLowerCase().includes('espera la siguiente palabra') || msg.toLowerCase().includes('completado')) {
+        toast.info('No puedes jugar hasta la siguiente palabra.');
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -181,6 +186,18 @@ const WordleGame: React.FC = () => {
         onSubmit={handleGuess}
         disabled={success || hasLost || loading}
       />
+      {(success || hasLost) && (
+        <button
+          className="mt-2 px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-900"
+          onClick={() => {
+            setAttempts([]);
+            setCurrentWord('');
+            setSuccess(false);
+          }}
+        >
+          Jugar de nuevo
+        </button>
+      )}
       <ToastContainer position="top-center" theme="dark" />
     </div>
   );

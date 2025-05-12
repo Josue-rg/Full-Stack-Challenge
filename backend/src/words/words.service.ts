@@ -32,6 +32,11 @@ export class WordsService {
     return this.wordsRepository.save(newWord);
   }
 
+  async findWord(word: string): Promise<Word | undefined> {
+    const found = await this.wordsRepository.findOne({ where: { word: word.toUpperCase() } });
+    return found ?? undefined;
+  }
+
   @Cron(CronExpression.EVERY_5_MINUTES)
   async selectNewWord() {
     try {
@@ -41,12 +46,25 @@ export class WordsService {
         .where('completed = :completed', { completed: false })
         .execute();
 
-      const word = await this.wordsRepository
+      let word = await this.wordsRepository
         .createQueryBuilder('word')
         .where('word.used = :used', { used: false })
         .orderBy('RANDOM()')
         .take(1)
         .getOne();
+
+      // Si no hay palabras sin usar, reinicia el ciclo
+      if (!word) {
+        await this.wordsRepository.createQueryBuilder()
+          .update()
+          .set({ used: false })
+          .execute();
+        word = await this.wordsRepository
+          .createQueryBuilder('word')
+          .orderBy('RANDOM()')
+          .take(1)
+          .getOne();
+      }
 
       if (word) {
         if (this.currentWord) {

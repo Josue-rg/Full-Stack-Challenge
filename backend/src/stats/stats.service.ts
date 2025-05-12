@@ -36,6 +36,13 @@ export class StatsService {
   }
 
   async getMostGuessedWords(): Promise<{ word: string; winCount: number }[]> {
-    return this.winRepo.createQueryBuilder('win').leftJoin('win.word', 'word').select('word.word', 'word').addSelect('COUNT(win.id)', 'winCount').groupBy('word.word').orderBy('winCount', 'DESC').limit(10).getRawMany();
+    return this.winRepo.createQueryBuilder('win')
+      .leftJoin('win.word', 'word')
+      .select('word.word', 'word')
+      .addSelect('COUNT(win.id)', 'winCount')
+      .groupBy('word.word')
+      .orderBy('COUNT(win.id)', 'DESC') // Usa la expresión, no el alias
+      .limit(10)
+      .getRawMany();
   }
 }
