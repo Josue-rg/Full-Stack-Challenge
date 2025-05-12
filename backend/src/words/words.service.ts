@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Word } from '../entities/word.entity';
+import { Game } from '../entities/game.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
@@ -12,8 +13,9 @@ export class WordsService {
   constructor(
     @InjectRepository(Word)
     private wordsRepository: Repository<Word>,
+    @InjectRepository(Game)
+    private gameRepository: Repository<Game>,
   ) {
-    // Seleccionar una palabra al inicio
     this.selectNewWord();
   }
 
@@ -33,6 +35,12 @@ export class WordsService {
   @Cron(CronExpression.EVERY_5_MINUTES)
   async selectNewWord() {
     try {
+      await this.gameRepository.createQueryBuilder()
+        .update()
+        .set({ completed: true })
+        .where('completed = :completed', { completed: false })
+        .execute();
+
       const word = await this.wordsRepository
         .createQueryBuilder('word')
         .where('word.used = :used', { used: false })

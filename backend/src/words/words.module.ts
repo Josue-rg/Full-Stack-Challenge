@@ -3,11 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WordsService } from './words.service';
 import { WordsController } from './words.controller';
 import { Word } from '../entities/word.entity';
+import { Game } from '../entities/game.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Word]),
+    TypeOrmModule.forFeature([Word, Game]),
     ScheduleModule.forRoot()
   ],
   providers: [WordsService],

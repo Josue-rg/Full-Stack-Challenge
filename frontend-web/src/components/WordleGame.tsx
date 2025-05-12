@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { guessWordService } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { guessWordService, getTimeUntilNextWord } from '../services/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -93,11 +93,45 @@ const WordInput: React.FC<WordInputProps> = ({ value, onChange, onSubmit, disabl
 
 const MAX_ATTEMPTS = 5;
 
+const formatTime = (ms: number) => {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+  const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+  return `${minutes}:${seconds}`;
+};
+
 const WordleGame: React.FC = () => {
   const [attempts, setAttempts] = useState<LetterFeedback[][]>([]);
   const [currentWord, setCurrentWord] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    let lastTime = 0;
+    const fetchTime = async () => {
+      const ms = await getTimeUntilNextWord();
+      setTimeLeft(ms);
+      lastTime = ms;
+    };
+    fetchTime();
+    interval = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev > 1000) return prev - 1000;
+        // Si el contador llega a cero, reinicia el estado del juego
+        if (prev <= 1000 && lastTime !== 0) {
+          setAttempts([]);
+          setCurrentWord('');
+          setSuccess(false);
+          lastTime = 0;
+          fetchTime();
+        }
+        return 0;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleInput = (value: string) => {
     setCurrentWord(value.toUpperCase());
@@ -127,15 +161,25 @@ const WordleGame: React.FC = () => {
     }
   };
 
+  const hasLost = attempts.length >= MAX_ATTEMPTS && !success;
   return (
     <div className="flex flex-col items-center gap-4">
+      <div className="text-purple-900 font-bold text-lg mb-2">
+        Siguiente palabra en: <span className="font-mono">{formatTime(timeLeft)}</span>
+      </div>
       <WordleGrid attempts={attempts} />
       <AttemptsLeft attempts={attempts.length} max={MAX_ATTEMPTS} />
+      {success && (
+        <div className="text-green-600 font-bold">¡Adivinaste la palabra! Espera la siguiente ronda.</div>
+      )}
+      {hasLost && (
+        <div className="text-red-600 font-bold">Sin intentos. Espera la siguiente palabra.</div>
+      )}
       <WordInput
         value={currentWord}
         onChange={handleInput}
         onSubmit={handleGuess}
-        disabled={success || attempts.length >= MAX_ATTEMPTS || loading}
+        disabled={success || hasLost || loading}
       />
       <ToastContainer position="top-center" theme="dark" />
     </div>

@@ -61,6 +61,11 @@ export const getTopPlayers = async () => {
   return response.data;
 };
 
+export const getTimeUntilNextWord = async () => {
+  const response = await api.get('/api/words/next-word-time');
+  return response.data.timeRemaining;
+};
+
 export const getPopularWords = async () => {
   const response = await api.get('/api/stats/popular-words');
   return response.data;
