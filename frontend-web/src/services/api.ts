@@ -45,4 +45,25 @@ export const guessWordService = async (word: string) => {
   return response.data;
 };
 
+export const getUserStats = async () => {
+  const [gamesRes, winsRes] = await Promise.all([
+    api.get('/api/stats/games'),
+    api.get('/api/stats/wins')
+  ]);
+  return {
+    totalGames: gamesRes.data.totalGames,
+    totalWins: winsRes.data.totalWins
+  };
+};
+
+export const getTopPlayers = async () => {
+  const response = await api.get('/api/stats/ranking');
+  return response.data;
+};
+
+export const getPopularWords = async () => {
+  const response = await api.get('/api/stats/popular-words');
+  return response.data;
+};
+
 export default api;

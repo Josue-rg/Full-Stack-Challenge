@@ -2,6 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import WordleGame from '../components/WordleGame';
+import GlobalTops from '../components/GlobalTops';
+import UserStats from '../components/UserStats';
 
 const HomePage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -39,10 +41,12 @@ const HomePage: React.FC = () => {
   
       <div className="py-10">
         <main>
-          <div className="max-w-lg mx-auto sm:px-6 lg:px-8">
+          <div className="mx-auto">
             <div className="px-4 sm:px-0">
-              <div className="bg-purple-900 rounded-3xl p-4 border">
-                <WordleGame />
+              <div className="flex flex-col md:flex-row gap-4 items-start justify-center w-full">
+                <div className="flex-1 flex justify-center"><GlobalTops /></div>
+                <div className="flex-1 flex justify-center"><div className="bg-purple-900 rounded-3xl p-4 border w-full max-w-lg"><WordleGame /></div></div>
+                <div className="flex-1 flex justify-center"><UserStats /></div>
               </div>
             </div>
           </div>
