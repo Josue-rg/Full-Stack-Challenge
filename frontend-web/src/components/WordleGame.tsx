@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { guessWordService, getTimeUntilNextWord, getAttemptsService } from '../services/api';
+import { guessWordService, getTimeUntilNextWord, getAttemptsService, getUserStats } from '../services/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -105,12 +105,36 @@ const loseSound = new Audio('/sounds/derrota.mp3');
 const timeoutSound = new Audio('/sounds/timeout.mp3');
 
 const WordleGame: React.FC = () => {
+  useEffect(() => {
+    const savedGameState = localStorage.getItem('wordleGameState');
+    if (savedGameState) {
+      const { attemptsCount, attempts, currentWord, success, timeLeft } = JSON.parse(savedGameState);
+      setAttemptsCount(attemptsCount);
+      setAttempts(attempts);
+      setCurrentWord(currentWord);
+      setSuccess(success);
+      setTimeLeft(timeLeft);
+    }
+  }, []);
+
   const [attemptsCount, setAttemptsCount] = useState(0);
   const [attempts, setAttempts] = useState<LetterFeedback[][]>([]);
   const [currentWord, setCurrentWord] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  useEffect(() => {
+    const gameState = {
+      attemptsCount,
+      attempts,
+      currentWord,
+      success,
+      timeLeft,
+    };
+    localStorage.setItem('wordleGameState', JSON.stringify(gameState));
+  }, [attemptsCount, attempts, currentWord, success, timeLeft]);
+
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
@@ -179,6 +203,10 @@ const WordleGame: React.FC = () => {
         toast.success('¡Felicidades! ¡Palabra correcta!');
         winSound.currentTime = 0;
         winSound.play();
+        setAttempts([]);
+        setCurrentWord('');
+        setAttemptsCount(MAX_ATTEMPTS);
+        return;
       }
       if (attempts.length + 1 >= MAX_ATTEMPTS && !result.every((l: any) => l.value === 1)) {
         toast.error('Lo siento, has perdido.');
