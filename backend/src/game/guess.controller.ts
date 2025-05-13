@@ -21,8 +21,8 @@ export class GuessController {
   @Get('attempts')
   async getAttempts(@Req() req) {
     const userId = req.user.userId;
-    // Obtener la palabra actual
     const currentWord = await this.wordsService.getCurrentWord();
+    console.log('Palabra actual:', currentWord.word);
     if (!currentWord || !currentWord.word) {
       throw new BadRequestException('No hay palabra activa');
     }

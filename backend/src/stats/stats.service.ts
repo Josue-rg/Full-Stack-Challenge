@@ -41,7 +41,7 @@ export class StatsService {
       .select('word.word', 'word')
       .addSelect('COUNT(win.id)', 'winCount')
       .groupBy('word.word')
-      .orderBy('COUNT(win.id)', 'DESC') // Usa la expresión, no el alias
+      .orderBy('COUNT(win.id)', 'DESC')
       .limit(10)
       .getRawMany();
   }

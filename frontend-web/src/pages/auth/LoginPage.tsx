@@ -73,7 +73,7 @@ const LoginPage: React.FC = () => {
                 name="username"
                 type="text"
                 required
-                className="bg-white/20 backdrop-blur-sm border  text-white rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2"
+                className="bg-white/20 backdrop-blur-sm border  text-black rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2"
                 placeholder="Nombre de usuario"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -89,7 +89,7 @@ const LoginPage: React.FC = () => {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="bg-white/20 backdrop-blur-sm border  text-white rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2"
+                className="bg-white/20 backdrop-blur-sm border  text-black rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2"
                 placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

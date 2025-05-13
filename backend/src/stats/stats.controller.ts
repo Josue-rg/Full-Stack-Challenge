@@ -1,19 +1,20 @@
-import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { StatsService } from './stats.service';
 
 @Controller('stats')
-@UseGuards(JwtAuthGuard)
 export class StatsController {
   constructor(private readonly statsService: StatsService) {}
 
-  @Get('games')
+  @UseGuards(JwtAuthGuard)
+  @Get('games') 
   async getTotalGames(@Req() req) {
     const userId = req.user.userId;
     const totalGames = await this.statsService.getTotalGames(userId);
     return { totalGames };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('wins')
   async getTotalWins(@Req() req) {
     const userId = req.user.userId;
