@@ -167,7 +167,7 @@ const WordleGame: React.FC = () => {
             loseSound.pause();
             loseSound.currentTime = 0;
             timeoutSound.currentTime = 0;
-            timeoutSound.play();
+            //timeoutSound.play();
             playedTimeout = true;
           }
           setAttempts([]);
@@ -201,8 +201,8 @@ const WordleGame: React.FC = () => {
       if (result.every((l: any) => l.value === 1)) {
         setSuccess(true);
         toast.success('¡Felicidades! ¡Palabra correcta!');
-        winSound.currentTime = 0;
-        winSound.play();
+        //winSound.currentTime = 0;
+        //winSound.play();
         setAttempts([]);
         setCurrentWord('');
         setAttemptsCount(MAX_ATTEMPTS);
@@ -211,7 +211,7 @@ const WordleGame: React.FC = () => {
       if (attempts.length + 1 >= MAX_ATTEMPTS && !result.every((l: any) => l.value === 1)) {
         toast.error('Lo siento, has perdido.');
         loseSound.currentTime = 0;
-        loseSound.play();
+        //loseSound.play();
       }
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Error al enviar intento';
@@ -255,7 +255,7 @@ const WordleGame: React.FC = () => {
           disabled={success || hasLost || loading}
         />
       ) : (
-        <div className="text-red-900 font-bold">Espera a que termine el tiempo para adivinar otra palabra.</div>
+        <div className="text-white text-center font-bold">Espera a que termine el tiempo para adivinar otra palabra.</div>
       )}
 
       <ToastContainer position="top-center" theme="dark" />
