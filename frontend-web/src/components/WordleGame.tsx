@@ -111,9 +111,9 @@ const WordleGame: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
-    // Sincroniza intentos con backend al cargar
     const fetchAttempts = async () => {
       try {
         const { attempts } = await getAttemptsService();
@@ -181,7 +181,7 @@ const WordleGame: React.FC = () => {
         winSound.play();
       }
       if (attempts.length + 1 >= MAX_ATTEMPTS && !result.every((l: any) => l.value === 1)) {
-        toast.error('¡Has alcanzado el máximo de intentos!');
+        toast.error('Lo siento, has perdido.');
         loseSound.currentTime = 0;
         loseSound.play();
       }
@@ -198,19 +198,37 @@ const WordleGame: React.FC = () => {
   };
 
   const hasLost = attemptsCount >= MAX_ATTEMPTS && !success;
+
+  useEffect(() => {
+    if (success || hasLost || timeLeft === 0) {
+      const fetchStats = async () => {
+        try {
+          const updatedStats = await getUserStats();
+          setStats(updatedStats);
+        } catch (error) {
+          console.error('Error al obtener estadísticas:', error);
+        }
+      };
+      fetchStats();
+    }
+  }, [success, hasLost, timeLeft]);
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="text-black font-bold text-lg mb-2">
+      <div className="text-white font-bold text-lg mb-2">
         Siguiente palabra en: <span className="font-mono">{formatTime(timeLeft)}</span>
       </div>
       <WordleGrid attempts={attempts} />
-      <AttemptsLeft attempts={attemptsCount} max={MAX_ATTEMPTS} />
-      <WordInput
-        value={currentWord}
-        onChange={handleInput}
-        onSubmit={handleGuess}
-        disabled={success || hasLost || loading}
-      />
+      {attemptsCount < MAX_ATTEMPTS ? <AttemptsLeft attempts={attemptsCount} max={MAX_ATTEMPTS} /> : null}
+      {attemptsCount < MAX_ATTEMPTS ? (
+        <WordInput
+          value={currentWord}
+          onChange={handleInput}
+          onSubmit={handleGuess}
+          disabled={success || hasLost || loading}
+        />
+      ) : (
+        <div className="text-red-900 font-bold">Espera a que termine el tiempo para adivinar otra palabra.</div>
+      )}
 
       <ToastContainer position="top-center" theme="dark" />
     </div>

@@ -58,6 +58,12 @@ export class GuessController {
     // Contar intentos actuales
     const attempts = await this.attemptRepo.count({ where: { gameId: game.id } });
     if (attempts >= 5) {
+    // Si no se ha hecho ningún intento, no contar la partida como jugada
+    if (attempts === 0) {
+        game.completed = true;
+        await this.gameRepo.save(game);
+        return;
+    }
       throw new BadRequestException('Máximo de 5 intentos alcanzado para esta palabra');
     }
 
