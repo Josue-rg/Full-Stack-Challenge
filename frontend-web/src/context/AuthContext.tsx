@@ -38,8 +38,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const data = await authService.login(username, password);
       localStorage.setItem('token', data.access_token);
       setUser({
-        id: data.id, // Cambiado de data.user.id
-        username: data.username, // Cambiado de data.user.username
+        id: data.id,
+        username: data.username,
       });
       navigate('/');
     } catch (error) {
