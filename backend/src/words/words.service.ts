@@ -17,6 +17,7 @@ export class WordsService {
     private gameRepository: Repository<Game>,
   ) {
     this.selectNewWord();
+setInterval(() => this.selectNewWord(), 300000);
   }
 
   async addWord(word: string): Promise<Word> {
@@ -39,7 +40,6 @@ export class WordsService {
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async selectNewWord() {
-    try {
       await this.gameRepository.createQueryBuilder()
         .update()
         .set({ completed: true })
@@ -53,17 +53,20 @@ export class WordsService {
         .take(1)
         .getOne();
 
-      // Si no hay palabras sin usar, reinicia el ciclo
       if (!word) {
-        await this.wordsRepository.createQueryBuilder()
-          .update()
-          .set({ used: false })
-          .execute();
-        word = await this.wordsRepository
-          .createQueryBuilder('word')
-          .orderBy('RANDOM()')
-          .take(1)
-          .getOne();
+        try {
+          await this.wordsRepository.createQueryBuilder()
+            .update()
+            .set({ used: false })
+            .execute();
+          word = await this.wordsRepository
+            .createQueryBuilder('word')
+            .orderBy('RANDOM()')
+            .take(1)
+            .getOne();
+        } catch (error) {
+          return;
+        }
       }
 
       if (word) {
@@ -73,10 +76,7 @@ export class WordsService {
         this.currentWord = word;
         this.lastWordSelectedAt = new Date();
       }
-    } catch (error) {
-      console.error('Error al seleccionar nueva palabra:', error);
     }
-  }
 
   async getAllWords(): Promise<Word[]> {
     return this.wordsRepository.find();

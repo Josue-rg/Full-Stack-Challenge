@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Req, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { GameService } from './game.service';
 import { WordsService } from '../words/words.service';
@@ -16,6 +16,24 @@ export class GuessController {
     @InjectRepository(Game) private gameRepo: Repository<Game>,
     @InjectRepository(Attempt) private attemptRepo: Repository<Attempt>
   ) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Get('attempts')
+  async getAttempts(@Req() req) {
+    const userId = req.user.userId;
+    // Obtener la palabra actual
+    const currentWord = await this.wordsService.getCurrentWord();
+    if (!currentWord || !currentWord.word) {
+      throw new BadRequestException('No hay palabra activa');
+    }
+    // Buscar el juego activo del usuario para la palabra actual
+    let game = await this.gameRepo.findOne({ where: { userId, completed: false } });
+    let attempts = 0;
+    if (game) {
+      attempts = await this.attemptRepo.count({ where: { gameId: game.id } });
+    }
+    return { attempts, maxAttempts: 5 };
+  }
 
   @Post()
   async guessWord(@Req() req, @Body() body: { word: string }) {

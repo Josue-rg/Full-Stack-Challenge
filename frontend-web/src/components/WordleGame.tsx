@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { guessWordService, getTimeUntilNextWord } from '../services/api';
+import { guessWordService, getTimeUntilNextWord, getAttemptsService } from '../services/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -105,6 +105,7 @@ const loseSound = new Audio('/sounds/derrota.mp3');
 const timeoutSound = new Audio('/sounds/timeout.mp3');
 
 const WordleGame: React.FC = () => {
+  const [attemptsCount, setAttemptsCount] = useState(0);
   const [attempts, setAttempts] = useState<LetterFeedback[][]>([]);
   const [currentWord, setCurrentWord] = useState('');
   const [success, setSuccess] = useState(false);
@@ -112,30 +113,43 @@ const WordleGame: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
   useEffect(() => {
+    // Sincroniza intentos con backend al cargar
+    const fetchAttempts = async () => {
+      try {
+        const { attempts } = await getAttemptsService();
+        setAttemptsCount(attempts);
+      } catch (e) {
+        setAttemptsCount(0);
+      }
+    };
+    fetchAttempts();
     let interval: NodeJS.Timeout;
     let lastTime = 0;
+    let playedTimeout = false;
     const fetchTime = async () => {
       const ms = await getTimeUntilNextWord();
       setTimeLeft(ms);
       lastTime = ms;
+      playedTimeout = false;
     };
     fetchTime();
     interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev > 1000) return prev - 1000;
-        // Si el contador llega a cero, reinicia el estado del juego
         if (prev <= 1000 && lastTime !== 0) {
-          // Detén cualquier sonido anterior
-          winSound.pause();
-          winSound.currentTime = 0;
-          loseSound.pause();
-          loseSound.currentTime = 0;
-          // Suena timeout
-          timeoutSound.currentTime = 0;
-          timeoutSound.play();
+          if (!playedTimeout) {
+            winSound.pause();
+            winSound.currentTime = 0;
+            loseSound.pause();
+            loseSound.currentTime = 0;
+            timeoutSound.currentTime = 0;
+            timeoutSound.play();
+            playedTimeout = true;
+          }
           setAttempts([]);
           setCurrentWord('');
           setSuccess(false);
+          setAttemptsCount(0);
           lastTime = 0;
           fetchTime();
         }
@@ -158,6 +172,7 @@ const WordleGame: React.FC = () => {
     try {
       const result = await guessWordService(currentWord);
       setAttempts(prev => [...prev, result]);
+      setAttemptsCount(prev => prev + 1);
       setCurrentWord('');
       if (result.every((l: any) => l.value === 1)) {
         setSuccess(true);
@@ -182,44 +197,21 @@ const WordleGame: React.FC = () => {
     }
   };
 
-  const hasLost = attempts.length >= MAX_ATTEMPTS && !success;
+  const hasLost = attemptsCount >= MAX_ATTEMPTS && !success;
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="text-purple-900 font-bold text-lg mb-2">
+      <div className="text-black font-bold text-lg mb-2">
         Siguiente palabra en: <span className="font-mono">{formatTime(timeLeft)}</span>
       </div>
       <WordleGrid attempts={attempts} />
-      <AttemptsLeft attempts={attempts.length} max={MAX_ATTEMPTS} />
-      {success && (
-        <div className="text-green-600 font-bold">¡Adivinaste la palabra! Espera la siguiente ronda.</div>
-      )}
-      {hasLost && (
-        <div className="text-red-600 font-bold">Sin intentos. Espera la siguiente palabra.</div>
-      )}
+      <AttemptsLeft attempts={attemptsCount} max={MAX_ATTEMPTS} />
       <WordInput
         value={currentWord}
         onChange={handleInput}
         onSubmit={handleGuess}
         disabled={success || hasLost || loading}
       />
-      {(success || hasLost) && (
-        <button
-          className="mt-2 px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-900"
-          onClick={() => {
-            winSound.pause();
-            winSound.currentTime = 0;
-            loseSound.pause();
-            loseSound.currentTime = 0;
-            timeoutSound.pause();
-            timeoutSound.currentTime = 0;
-            setAttempts([]);
-            setCurrentWord('');
-            setSuccess(false);
-          }}
-        >
-          Jugar de nuevo
-        </button>
-      )}
+
       <ToastContainer position="top-center" theme="dark" />
     </div>
   );
