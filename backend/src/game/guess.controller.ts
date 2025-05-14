@@ -26,13 +26,31 @@ export class GuessController {
     if (!currentWord || !currentWord.word) {
       throw new BadRequestException('No hay palabra activa');
     }
-    // Buscar el juego activo del usuario para la palabra actual
+
     let game = await this.gameRepo.findOne({ where: { userId, completed: false } });
     let attempts = 0;
     if (game) {
       attempts = await this.attemptRepo.count({ where: { gameId: game.id } });
     }
     return { attempts, maxAttempts: 5 };
+  }
+
+  @Post('next-word')
+  async getNextWord(@Req() req) {
+    const userId = req.user.userId;
+    let game = await this.gameRepo.findOne({ where: { userId, completed: false } });
+    
+    if (game) {
+      game.completed = true;
+      await this.gameRepo.save(game);
+    }
+    await this.wordsService.selectNewWord(userId);
+    const newGame = await this.gameService.createGame(userId);
+    
+    const currentWord = await this.wordsService.getCurrentWord();
+    console.log('Nueva palabra seleccionada:', currentWord.word);
+    
+    return { success: true, message: 'Cambiado a la siguiente palabra' };
   }
 
   @Post()
@@ -43,31 +61,23 @@ export class GuessController {
       throw new BadRequestException('La palabra debe tener 5 letras');
     }
 
-    // Obtener la palabra actual
     const currentWord = await this.wordsService.getCurrentWord();
     if (!currentWord || !currentWord.word) {
       throw new BadRequestException('No hay palabra activa');
     }
 
-    // Obtener el juego activo del usuario para la palabra actual
     let game = await this.gameRepo.findOne({ where: { userId, completed: false } });
     if (!game) {
       game = await this.gameService.createGame(userId);
     }
 
-    // Contar intentos actuales
     const attempts = await this.attemptRepo.count({ where: { gameId: game.id } });
     if (attempts >= 5) {
-    // Si no se ha hecho ningún intento, no contar la partida como jugada
-    if (attempts === 0) {
-        game.completed = true;
-        await this.gameRepo.save(game);
-        return;
-    }
+      game.completed = true;
+      await this.gameRepo.save(game);
       throw new BadRequestException('Máximo de 5 intentos alcanzado para esta palabra');
     }
 
-    // Lógica de comparación
     type LetterResult = { letter: string; value: number };
     const result: LetterResult[] = [];
     const used = Array(5).fill(false);
@@ -76,7 +86,7 @@ export class GuessController {
         result.push({ letter: guess[i], value: 1 });
         used[i] = true;
       } else {
-        result.push({ letter: guess[i], value: 0 }); // placeholder, se actualizará después
+        result.push({ letter: guess[i], value: 0 });
       }
     }
     for (let i = 0; i < 5; i++) {
@@ -90,10 +100,8 @@ export class GuessController {
       }
     }
 
-    // Registrar intento
     await this.gameService.createAttempt(game.id, guess, JSON.stringify(result));
 
-    // Si es correcta, marcar win y completar juego
     if (guess === currentWord.word) {
       await this.gameService.createWin(userId, currentWord.id);
       game.completed = true;

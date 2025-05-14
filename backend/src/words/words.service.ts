@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Word } from '../entities/word.entity';
 import { Game } from '../entities/game.entity';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Win } from '../entities/win.entity';
 
 @Injectable()
 export class WordsService {
@@ -15,9 +15,74 @@ export class WordsService {
     private wordsRepository: Repository<Word>,
     @InjectRepository(Game)
     private gameRepository: Repository<Game>,
+    @InjectRepository(Win)
+    private winRepository: Repository<Win>,
   ) {
-    this.selectNewWord();
-setInterval(() => this.selectNewWord(), 300000);
+    this.initializeWord();
+    setInterval(() => this.initializeWord(), 300000);
+  }
+
+  private async initializeWord() {
+    await this.gameRepository.createQueryBuilder()
+      .update()
+      .set({ completed: true })
+      .where('completed = :completed', { completed: false })
+      .execute();
+    const word = await this.wordsRepository
+      .createQueryBuilder('word')
+      .orderBy('RANDOM()')
+      .take(1)
+      .getOne();
+
+    if (word) {
+      this.currentWord = word;
+      this.lastWordSelectedAt = new Date();
+      console.log('Nueva palabra seleccionada:', word.word);
+    }
+  }
+
+  async selectNewWord(userId?: string) {
+    if (!userId) {
+      throw new NotFoundException('Usuario no proporcionado');
+    }
+
+    // Obtener las palabras ya ganadas por el usuario
+    const wonWords = await this.winRepository
+      .createQueryBuilder('win')
+      .select('win.word.id')
+      .where('win.user.id = :userId', { userId })
+      .getMany();
+
+    const wonWordIds = wonWords.map(win => win.word.id);
+    
+    // Construir la consulta excluyendo palabras ganadas
+    let queryBuilder = this.wordsRepository.createQueryBuilder('word');
+    if (wonWordIds.length > 0) {
+      queryBuilder = queryBuilder.where('word.id NOT IN (:...wonWordIds)', { wonWordIds });
+    }
+
+    // Obtener una palabra aleatoria no ganada
+    let word = await queryBuilder
+      .orderBy('RANDOM()')
+      .take(1)
+      .getOne();
+
+    // Si no hay palabras disponibles no ganadas, obtener cualquier palabra
+    if (!word) {
+      word = await this.wordsRepository
+        .createQueryBuilder('word')
+        .orderBy('RANDOM()')
+        .take(1)
+        .getOne();
+    }
+
+    if (word) {
+      this.currentWord = word;
+      this.lastWordSelectedAt = new Date();
+      console.log('Nueva palabra seleccionada para usuario:', word.word);
+    }
+
+    return word;
   }
 
   async addWord(word: string): Promise<Word> {
@@ -38,46 +103,6 @@ setInterval(() => this.selectNewWord(), 300000);
     return found ?? undefined;
   }
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
-  async selectNewWord() {
-      await this.gameRepository.createQueryBuilder()
-        .update()
-        .set({ completed: true })
-        .where('completed = :completed', { completed: false })
-        .execute();
-
-      let word = await this.wordsRepository
-        .createQueryBuilder('word')
-        .where('word.used = :used', { used: false })
-        .orderBy('RANDOM()')
-        .take(1)
-        .getOne();
-
-      if (!word) {
-        try {
-          await this.wordsRepository.createQueryBuilder()
-            .update()
-            .set({ used: false })
-            .execute();
-          word = await this.wordsRepository
-            .createQueryBuilder('word')
-            .orderBy('RANDOM()')
-            .take(1)
-            .getOne();
-        } catch (error) {
-          return;
-        }
-      }
-
-      if (word) {
-        if (this.currentWord) {
-          await this.wordsRepository.update(this.currentWord.id, { used: true, usedAt: new Date() });
-        }
-        this.currentWord = word;
-        this.lastWordSelectedAt = new Date();
-      }
-    }
-
   async getAllWords(): Promise<Word[]> {
     return this.wordsRepository.find();
   }
@@ -92,7 +117,9 @@ setInterval(() => this.selectNewWord(), 300000);
   getTimeUntilNextWord(): number {
     if (!this.lastWordSelectedAt) return 0;
     const now = new Date();
-    const diff = 300000 - (now.getTime() - this.lastWordSelectedAt.getTime());
+    const nextWordTime = new Date(this.lastWordSelectedAt);
+    nextWordTime.setMinutes(nextWordTime.getMinutes() + 5);
+    const diff = nextWordTime.getTime() - now.getTime();
     return Math.max(0, diff);
   }
 }

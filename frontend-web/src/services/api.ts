@@ -45,6 +45,11 @@ export const getAttemptsService = async () => {
   return response.data;
 };
 
+export const getNextWordService = async () => {
+  const response = await api.post('/api/guess/next-word');
+  return response.data;
+};
+
 export const guessWordService = async (word: string) => {
   const response = await api.post('/api/guess', { word });
   return response.data;

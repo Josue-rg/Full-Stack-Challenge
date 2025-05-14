@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { guessWordService, getTimeUntilNextWord, getAttemptsService, getUserStats } from '../services/api';
+import { guessWordService, getTimeUntilNextWord, getAttemptsService, getUserStats, getNextWordService } from '../services/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
 
 interface LetterFeedback {
   letter: string;
@@ -57,7 +56,7 @@ interface WordInputProps {
 
 const WordInput: React.FC<WordInputProps> = ({ value, onChange, onSubmit, disabled }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/[^a-zA-Z]/g, '').slice(0, 5);
+    const val = e.target.value.replace(/[^a-zA-ZñÑ]/g, '').slice(0, 5);
     onChange(val);
   };
 
@@ -240,6 +239,44 @@ const WordleGame: React.FC = () => {
       fetchStats();
     }
   }, [success, hasLost, timeLeft]);
+  const handleNextWord = async () => {
+    try {
+      setLoading(true);
+      const response = await getNextWordService();
+      
+      // Verificar si la respuesta indica que no hay más palabras disponibles
+      if (response.message && response.message.includes('todas las palabras')) {
+        toast.info('¡Has adivinado todas las palabras disponibles!');
+        return;
+      }
+      
+      setAttempts([]);
+      setCurrentWord('');
+      setSuccess(false);
+      setAttemptsCount(0);
+      
+      setTimeLeft(300000); // 5 minutos en milisegundos
+      
+      const cleanGameState = {
+        attemptsCount: 0,
+        attempts: [],
+        currentWord: '',
+        success: false,
+        timeLeft: 300000
+      };
+      localStorage.setItem('wordleGameState', JSON.stringify(cleanGameState));
+      
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Error al obtener la siguiente palabra');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="text-white font-bold text-lg mb-2">
@@ -252,10 +289,20 @@ const WordleGame: React.FC = () => {
           value={currentWord}
           onChange={handleInput}
           onSubmit={handleGuess}
-          disabled={success || hasLost || loading}
+          disabled={loading}
         />
       ) : (
-        <div className="text-white text-center font-bold">Espera a que termine el tiempo para adivinar otra palabra.</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="text-white text-center font-bold">
+            {success ? "¡Felicidades! Has adivinado la palabra." : "Te terminaste tus intentos."}
+          </div>
+          <button
+            onClick={handleNextWord}
+            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Siguiente Palabra
+          </button>
+        </div>
       )}
 
       <ToastContainer position="top-center" theme="dark" />
