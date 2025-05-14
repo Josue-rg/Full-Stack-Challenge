@@ -22,13 +22,21 @@ export class StatsController {
     return { totalWins };
   }
 
-  @Get('ranking')
-  async getRanking() {
-    return this.statsService.getTop10Players();
+  @Get('top-users')
+  async getUsers() {
+    const users = await this.statsService.getTopUsers();
+    if (users.length === 0) {
+      return { message: "Aún no hay usuarios con victorias" };
+    }
+    return users;
   }
 
   @Get('popular-words')
   async getPopularWords() {
-    return this.statsService.getMostGuessedWords();
+    const words = await this.statsService.getMostGuessedWords();
+    if (words.length === 0) {
+      return { message: "Aún no hay palabras adivinadas" };
+    }
+    return words;
   }
 }

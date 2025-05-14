@@ -14,14 +14,17 @@ export class GameService {
     @InjectRepository(Attempt) private attemptRepo: Repository<Attempt>,
     @InjectRepository(Win) private winRepo: Repository<Win>,
     @InjectRepository(User) private userRepo: Repository<User>,
-    @InjectRepository(Word) private wordRepo: Repository<Word>
+    @InjectRepository(Word) private wordRepo: Repository<Word>,
   ) {}
 
   async createGame(userId: string): Promise<Game> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new Error('User not found');
     const game = this.gameRepo.create({ userId, user });
-    return this.gameRepo.save(game);
+    await this.gameRepo.save(game);
+    await this.userRepo.increment({ id: userId }, 'totalGames', 1);
+
+    return game;
   }
 
   async createAttempt(gameId: number, word: string, result: string): Promise<Attempt> {
@@ -34,6 +37,7 @@ export class GameService {
     const word = await this.wordRepo.findOne({ where: { id: wordId } });
     if (!user || !word) throw new Error('User or Word not found');
     const win = this.winRepo.create({ user, word });
+    await this.userRepo.increment({ id: userId }, 'totalWins', 1);
     return this.winRepo.save(win);
   }
 }

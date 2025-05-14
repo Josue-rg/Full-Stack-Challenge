@@ -63,7 +63,7 @@ export const getUserStats = async (token: string) => {
 };
 
 export const getTopPlayers = async () => {
-  const response = await api.get('/api/stats/ranking');
+  const response = await api.get('/api/stats/top-users');
   return response.data;
 };
 

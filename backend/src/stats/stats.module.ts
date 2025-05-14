@@ -5,9 +5,10 @@ import { StatsController } from './stats.controller';
 import { User } from '../entities/user.entity';
 import { Game } from '../entities/game.entity';
 import { Win } from '../entities/win.entity';
+import { Word } from '../entities/word.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Game, Win])],
+  imports: [TypeOrmModule.forFeature([User, Game, Win, Word])],
   providers: [StatsService],
   controllers: [StatsController],
 })
