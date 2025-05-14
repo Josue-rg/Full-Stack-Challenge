@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Win } from './win.entity';
 
 @Entity()
@@ -14,12 +14,6 @@ export class Word {
 
   @Column({ nullable: true })
   usedAt: Date;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 
   @OneToMany(() => Win, win => win.word)
   wins: Win[];

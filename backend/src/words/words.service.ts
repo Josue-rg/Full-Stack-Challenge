@@ -55,19 +55,16 @@ export class WordsService {
 
     const wonWordIds = wonWords.map(win => win.word.id);
     
-    // Construir la consulta excluyendo palabras ganadas
     let queryBuilder = this.wordsRepository.createQueryBuilder('word');
     if (wonWordIds.length > 0) {
       queryBuilder = queryBuilder.where('word.id NOT IN (:...wonWordIds)', { wonWordIds });
     }
 
-    // Obtener una palabra aleatoria no ganada
     let word = await queryBuilder
       .orderBy('RANDOM()')
       .take(1)
       .getOne();
 
-    // Si no hay palabras disponibles no ganadas, obtener cualquier palabra
     if (!word) {
       word = await this.wordsRepository
         .createQueryBuilder('word')

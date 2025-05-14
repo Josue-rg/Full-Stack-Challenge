@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
 import { User } from './user.entity';
 import { Attempt } from './attempt.entity';
 
@@ -15,12 +15,6 @@ export class Game {
 
   @Column({ default: false })
   won: boolean;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 
   @ManyToOne(() => User, user => user.games)
   user: User;

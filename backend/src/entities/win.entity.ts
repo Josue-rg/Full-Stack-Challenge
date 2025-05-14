@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { User } from './user.entity';
 import { Word } from './word.entity';
 
@@ -13,6 +13,4 @@ export class Win {
   @ManyToOne(() => Word, word => word.wins)
   word: Word;
 
-  @CreateDateColumn()
-  createdAt: Date;
 }
