@@ -40,7 +40,7 @@ export class AuthService {
       throw new BadRequestException('Usuario o contraseña incorrectos');
     }
 
-    const payload = { username: user.username, sub: user.id };
+    const payload = { username: user.username, userId: user.id };
     return {
       access_token: this.jwtService.sign(payload),
     };

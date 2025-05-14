@@ -50,10 +50,11 @@ export const guessWordService = async (word: string) => {
   return response.data;
 };
 
-export const getUserStats = async () => {
+export const getUserStats = async (token: string) => {
+  const headers = { 'Authorization': `Bearer ${token}` };
   const [gamesRes, winsRes] = await Promise.all([
-    api.get('/api/stats/games'),
-    api.get('/api/stats/wins')
+    api.get('/api/stats/games', { headers }),
+    api.get('/api/stats/wins', { headers })
   ]);
   return {
     totalGames: gamesRes.data.totalGames,

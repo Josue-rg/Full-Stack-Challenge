@@ -6,23 +6,40 @@ interface UserStatsData {
   totalWins: number;
 }
 
-
 const UserStats: React.FC = () => {
   const [stats, setStats] = useState<UserStatsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    getUserStats().then(data => {
-      timeoutId = setTimeout(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('No token found');
+      setLoading(false);
+      return;
+    }
+
+    getUserStats(token)
+      .then(data => {
         setStats(data);
+      })
+      .catch(error => {
+        setError(error.message);
+      })
+      .finally(() => {
         setLoading(false);
-      }, 1000);
-    });
-    return () => clearTimeout(timeoutId);
+      });
   }, []);
 
   if (loading) return <div>Cargando estadísticas...</div>;
+
+  if (error) return (
+    <div className="bg-gray-900 text-white rounded p-4 shadow w-full max-w-xs mx-auto">
+      <h2 className="text-lg font-bold mb-2">Error</h2>
+      <div className="text-gray-400">{error}</div>
+    </div>
+  );
+
   if (!stats) return (
     <div className="bg-gray-900 text-white rounded p-4 shadow w-full max-w-xs mx-auto">
       <h2 className="text-lg font-bold mb-2">Tus Estadísticas</h2>
