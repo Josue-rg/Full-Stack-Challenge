@@ -1,5 +1,4 @@
-import { createContext, useState, useContext, useEffect } from 'react';
-import type { ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 
@@ -18,8 +17,25 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Recuperar la información del usuario del token
+      try {
+        const tokenData = JSON.parse(atob(token.split('.')[1]));
+        setUser({
+          id: tokenData.sub,
+          username: tokenData.username
+        });
+      } catch (error) {
+        console.error('Error al decodificar el token:', error);
+        localStorage.removeItem('token');
+      }
+    }
+  }, []);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
