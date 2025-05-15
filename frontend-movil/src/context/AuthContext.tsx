@@ -1,10 +1,11 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from '../services/api';
 
 interface User {
-  id: string;
+  id: string
   username: string;
 }
 
@@ -30,14 +31,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    setLoading(false);
+    const checkToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          const tokenData = JSON.parse(atob(token.split('.')[1]));
+          setUser({
+            id: tokenData.sub,
+            username: tokenData.username
+          });
+        }
+      } catch (error) {
+        console.error('Error al verificar el token:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkToken();
   }, []);
 
   const login = async (username: string, password: string) => {
     try {
       const data = await authService.login(username, password);
-      localStorage.setItem('token', data.access_token);
+      await AsyncStorage.setItem('token', data.access_token);
       setUser({
         id: data.id,
         username: data.username,
@@ -53,7 +69,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await authService.register({ username, password });
       const loginData = await authService.login(username, password);
-      localStorage.setItem('token', loginData.access_token);
+      await AsyncStorage.setItem('token', loginData.access_token);
       setUser({
         id: loginData.id,
         username: loginData.username,
@@ -65,8 +81,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const logout = async () => {
+    await AsyncStorage.removeItem('token');
     setUser(null);
     navigation.navigate('Login');
   };

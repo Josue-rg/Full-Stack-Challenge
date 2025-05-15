@@ -1,12 +1,19 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 
 const ScreenHome = () => {
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.navbar}>
         <Text style={styles.title}>WORDLE</Text>
-        <Button title="Cerrar sesión" onPress={() => {}} color="#4c51bf" />
+        <Button title="Cerrar sesión" onPress={handleLogout} color="#4c51bf" />
       </View>
       <View style={styles.content}>
         <View style={styles.card}><Text style={styles.cardText}>Juego de Wordle</Text></View>

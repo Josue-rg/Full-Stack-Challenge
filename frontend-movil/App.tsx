@@ -11,7 +11,12 @@ function App() {
   return (
     <NavigationContainer>
       <AuthProvider>
-        <Stack.Navigator initialRouteName="Login">
+        <Stack.Navigator 
+          initialRouteName="Login"
+          screenOptions={{
+            headerShown: false
+          }}
+        >
           <Stack.Screen name="Login" component={ScreenLogin} />
           <Stack.Screen name="Register" component={ScreenRegister} />
           <Stack.Screen name="Home" component={ScreenHome} />
