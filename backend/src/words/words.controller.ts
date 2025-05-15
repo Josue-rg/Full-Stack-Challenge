@@ -2,7 +2,7 @@ import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
 import { WordsService } from './words.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-@Controller('words')
+@Controller('api/words')
 export class WordsController {
   constructor(private readonly wordsService: WordsService) {}
 
@@ -22,11 +22,4 @@ export class WordsController {
     return this.wordsService.getCurrentWord();
   }
 
-  @Get('next-word-time')
-  @UseGuards(JwtAuthGuard)
-  getTimeUntilNextWord() {
-    return {
-      timeRemaining: this.wordsService.getTimeUntilNextWord()
-    };
-  }
 }

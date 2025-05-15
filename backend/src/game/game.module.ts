@@ -7,12 +7,11 @@ import { User } from '../entities/user.entity';
 import { Word } from '../entities/word.entity';
 import { GameService } from './game.service';
 import { GameController } from './game.controller';
-import { GuessController } from './guess.controller';
 import { WordsService } from '../words/words.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Game, Attempt, Win, User, Word])],
   providers: [GameService, WordsService],
-  controllers: [GameController, GuessController],
+  controllers: [GameController],
 })
 export class GameModule {}

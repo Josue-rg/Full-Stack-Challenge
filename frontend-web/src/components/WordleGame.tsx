@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { guessWordService, getTimeUntilNextWord, getAttemptsService, getUserStats, getNextWordService } from '../services/api';
+import { gameService } from '../services/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -56,7 +56,7 @@ interface WordInputProps {
 
 const WordInput: React.FC<WordInputProps> = ({ value, onChange, onSubmit, disabled }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/[^a-zA-ZñÑ]/g, '').slice(0, 5);
+    const val = e.target.value.slice(0, 5);
     onChange(val);
   };
 
@@ -99,91 +99,63 @@ const formatTime = (ms: number) => {
   return `${minutes}:${seconds}`;
 };
 
-const winSound = new Audio('/sounds/victoria.mp3');
-const loseSound = new Audio('/sounds/derrota.mp3');
-const timeoutSound = new Audio('/sounds/timeout.mp3');
-
-const WordleGame: React.FC = () => {
-  useEffect(() => {
-    const savedGameState = localStorage.getItem('wordleGameState');
-    if (savedGameState) {
-      const { attemptsCount, attempts, currentWord, success, timeLeft } = JSON.parse(savedGameState);
-      setAttemptsCount(attemptsCount);
-      setAttempts(attempts);
-      setCurrentWord(currentWord);
-      setSuccess(success);
-      setTimeLeft(timeLeft);
-    }
-  }, []);
-
+const WordleGame = () => {
   const [attemptsCount, setAttemptsCount] = useState(0);
   const [attempts, setAttempts] = useState<LetterFeedback[][]>([]);
   const [currentWord, setCurrentWord] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [showGame, setShowGame] = useState(false);
+  const [gameId, setGameId] = useState<number | null>(null);
 
+  // Temporizador para el juego
   useEffect(() => {
-    const gameState = {
-      attemptsCount,
-      attempts,
-      currentWord,
-      success,
-      timeLeft,
-    };
-    localStorage.setItem('wordleGameState', JSON.stringify(gameState));
-  }, [attemptsCount, attempts, currentWord, success, timeLeft]);
+    let intervalId: NodeJS.Timeout;
+    
+    if (showGame && timeLeft > 0) {
+      intervalId = setInterval(() => {
+        setTimeLeft(prevTime => {
+          if (prevTime <= 1000) {
+            clearInterval(intervalId);
+            toast.error('¡Tiempo agotado!');
+            setShowGame(false);
+            return 0;
+          }
+          return prevTime - 1000;
+        });
+      }, 1000);
+    }
 
-  const [stats, setStats] = useState<any>(null);
-
-  useEffect(() => {
-    const fetchAttempts = async () => {
-      try {
-        const { attempts } = await getAttemptsService();
-        setAttemptsCount(attempts);
-      } catch (e) {
-        setAttemptsCount(0);
+    // Limpiar el intervalo cuando el componente se desmonte o el juego termine
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
       }
     };
-    fetchAttempts();
-    let interval: NodeJS.Timeout;
-    let lastTime = 0;
-    let playedTimeout = false;
-    const fetchTime = async () => {
-      const ms = await getTimeUntilNextWord();
-      setTimeLeft(ms);
-      lastTime = ms;
-      playedTimeout = false;
-    };
-    fetchTime();
-    interval = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev > 1000) return prev - 1000;
-        if (prev <= 1000 && lastTime !== 0) {
-          if (!playedTimeout) {
-            winSound.pause();
-            winSound.currentTime = 0;
-            loseSound.pause();
-            loseSound.currentTime = 0;
-            timeoutSound.currentTime = 0;
-            //timeoutSound.play();
-            playedTimeout = true;
-          }
-          setAttempts([]);
-          setCurrentWord('');
-          setSuccess(false);
-          setAttemptsCount(0);
-          lastTime = 0;
-          fetchTime();
-        }
-        return 0;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  }, [showGame, timeLeft]);
 
-  const handleInput = (value: string) => {
-    setCurrentWord(value.toUpperCase());
+  const handleStartGame = async () => {
+    setLoading(true);
+    try {
+      const response = await gameService.startGame();
+      if (response.success && response.gameId) {
+        setGameId(response.gameId);
+        setShowGame(true);
+        setTimeLeft(300000);
+        setAttemptsCount(0);
+        setAttempts([]);
+        setCurrentWord('');
+        setSuccess(false);
+      } else {
+        toast.error(response.message || 'No se pudo iniciar el juego');
+      }
+    } catch (error) {
+      console.error('Error al iniciar el juego:', error);
+      toast.error('Error al iniciar el juego');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGuess = async () => {
@@ -193,118 +165,71 @@ const WordleGame: React.FC = () => {
     }
     setLoading(true);
     try {
-      const result = await guessWordService(currentWord);
-      setAttempts(prev => [...prev, result]);
-      setAttemptsCount(prev => prev + 1);
+      const response = await gameService.sendAttempt(gameId!, currentWord);
+      const formattedResult = response.feedback.map((value: number, index: number) => ({
+        letter: currentWord[index],
+        value
+      }));
+      setAttempts(prev => [...prev, formattedResult]);
+      setAttemptsCount(response.attempts);
       setCurrentWord('');
-      if (result.every((l: any) => l.value === 1)) {
+      
+      console.log('Respuesta del intento:', response);
+      
+      if (response.isWon) {
         setSuccess(true);
-        toast.success('¡Felicidades! ¡Palabra correcta!');
-        //winSound.currentTime = 0;
-        //winSound.play();
-        setAttempts([]);
-        setCurrentWord('');
-        setAttemptsCount(MAX_ATTEMPTS);
-        return;
+        toast.success('¡Felicidades! ¡Has ganado!');
+        setShowGame(false);
+      } else if (response.gameCompleted && !response.isWon) {
+        toast.error('¡Game Over! Se acabaron los intentos');
+        setShowGame(false);
       }
-      if (attempts.length + 1 >= MAX_ATTEMPTS && !result.every((l: any) => l.value === 1)) {
-        toast.error('Lo siento, has perdido.');
-        loseSound.currentTime = 0;
-        //loseSound.play();
-      }
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Error al enviar intento';
-      if (msg.toLowerCase().includes('espera la siguiente palabra') || msg.toLowerCase().includes('completado')) {
-        toast.info('No puedes jugar hasta la siguiente palabra.');
-      } else {
-        toast.error(msg);
-      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al validar la palabra');
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const hasLost = attemptsCount >= MAX_ATTEMPTS && !success;
-
-  useEffect(() => {
-    if (success || hasLost || timeLeft === 0) {
-      const fetchStats = async () => {
-        try {
-          const updatedStats = await getUserStats();
-          setStats(updatedStats);
-        } catch (error) {
-          console.error('Error al obtener estadísticas:', error);
-        }
-      };
-      fetchStats();
-    }
-  }, [success, hasLost, timeLeft]);
-  const handleNextWord = async () => {
-    try {
-      setLoading(true);
-      const response = await getNextWordService();
-      
-      // Verificar si la respuesta indica que no hay más palabras disponibles
-      if (response.message && response.message.includes('todas las palabras')) {
-        toast.info('¡Has adivinado todas las palabras disponibles!');
-        return;
-      }
-      
-      setAttempts([]);
-      setCurrentWord('');
-      setSuccess(false);
-      setAttemptsCount(0);
-      
-      setTimeLeft(300000); // 5 minutos en milisegundos
-      
-      const cleanGameState = {
-        attemptsCount: 0,
-        attempts: [],
-        currentWord: '',
-        success: false,
-        timeLeft: 300000
-      };
-      localStorage.setItem('wordleGameState', JSON.stringify(cleanGameState));
-      
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error('Error al obtener la siguiente palabra');
-      }
-    } finally {
-      setLoading(false);
-    }
+  const handleInput = (value: string) => {
+    setCurrentWord(value.toUpperCase());
   };
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="text-white font-bold text-lg mb-2">
-        Siguiente palabra en: <span className="font-mono">{formatTime(timeLeft)}</span>
-      </div>
-      <WordleGrid attempts={attempts} />
-      {attemptsCount < MAX_ATTEMPTS ? <AttemptsLeft attempts={attemptsCount} max={MAX_ATTEMPTS} /> : null}
-      {attemptsCount < MAX_ATTEMPTS ? (
-        <WordInput
-          value={currentWord}
-          onChange={handleInput}
-          onSubmit={handleGuess}
-          disabled={loading}
-        />
-      ) : (
+      {loading ? (
+        <div className="loading-spinner">Cargando...</div>
+      ) : !showGame ? (
         <div className="flex flex-col items-center gap-4">
-          <div className="text-white text-center font-bold">
-            {success ? "¡Felicidades! Has adivinado la palabra." : "Te terminaste tus intentos."}
-          </div>
+          <h2 className="text-white text-2xl mb-4">¡Hola!, jugemos!!!</h2>
           <button
-            onClick={handleNextWord}
-            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+            onClick={handleStartGame}
+            className="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition-colors text-xl font-bold"
+            disabled={loading}
           >
-            Siguiente Palabra
+            {loading ? 'Iniciando...' : 'JUGAR'}
           </button>
         </div>
+      ) : (
+        <>
+          <div className="text-white font-bold text-lg mb-2">
+            Siguiente palabra en: <span className="font-mono">{formatTime(timeLeft)}</span>
+          </div>
+          <WordleGrid attempts={attempts} />
+          {attemptsCount < MAX_ATTEMPTS && !success && (
+            <>
+              <AttemptsLeft attempts={attemptsCount} max={MAX_ATTEMPTS} />
+              <WordInput
+                value={currentWord}
+                onChange={handleInput}
+                onSubmit={handleGuess}
+                disabled={loading || success}
+              />
+            </>
+          )}
+        </>
       )}
-
       <ToastContainer position="top-center" theme="dark" />
     </div>
   );

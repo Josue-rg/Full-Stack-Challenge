@@ -1,5 +1,4 @@
 import axios from 'axios';
-
 const API_URL = 'http://localhost:3000';
 
 const api = axios.create({
@@ -7,6 +6,12 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+api.interceptors.request.use(config => {
+  return config;
+}, error => {
+  return Promise.reject(error);
 });
 
 api.interceptors.request.use((config) => {
@@ -27,39 +32,64 @@ export const authService = {
   },
   
   register: async (userData: { username: string; password: string }) => {
-    const response = await api.post('api/auth/register', {
-      username: userData.username,
-      password: userData.password
-    });
+    const response = await api.post('api/auth/register', userData);
     return response.data;
   },
 
   getAllUsers: async () => {
-    const response = await api.get(`${API_URL}/api/auth/users`);
+    const response = await api.get('api/auth/users');
     return response.data;
   }
 };
 
-export const getAttemptsService = async () => {
-  const response = await api.get('/api/guess/attempts');
-  return response.data;
+export const gameService = {
+  startGame: async (): Promise<{
+    success: boolean;
+    gameId?: number;
+    message?: string;
+    wordLength?: number;
+    currentWord?: string;
+  }> => {
+    try {
+      const response = await api.post('api/games/start');
+      return {
+        ...response.data,
+        success: true
+      };
+    } catch (error: any) {
+      console.error('Error al iniciar el juego:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al iniciar el juego'
+      };
+    }
+  },
+
+  sendAttempt: async (gameId: number, word: string) => {
+    const response = await api.post('api/games/attempt', { gameId, word });
+    return response.data;
+  },
+
+  getStats: async () => {
+    const response = await api.get('api/games/stats');
+    return response.data;
+  },
+
+  getTopPlayers: async () => {
+    const response = await api.get('api/games/top-players');
+    return response.data;
+  },
+
+  getMostGuessedWords: async () => {
+    const response = await api.get('api/games/most-guessed-words');
+    return response.data;
+  }
 };
 
-export const getNextWordService = async () => {
-  const response = await api.post('/api/guess/next-word');
-  return response.data;
-};
-
-export const guessWordService = async (word: string) => {
-  const response = await api.post('/api/guess', { word });
-  return response.data;
-};
-
-export const getUserStats = async (token: string) => {
-  const headers = { 'Authorization': `Bearer ${token}` };
+export const getUserStats = async () => {
   const [gamesRes, winsRes] = await Promise.all([
-    api.get('/api/stats/games', { headers }),
-    api.get('/api/stats/wins', { headers })
+    api.get('api/stats/games'),
+    api.get('api/stats/wins')
   ]);
   return {
     totalGames: gamesRes.data.totalGames,
@@ -68,17 +98,12 @@ export const getUserStats = async (token: string) => {
 };
 
 export const getTopPlayers = async () => {
-  const response = await api.get('/api/stats/top-users');
+  const response = await api.get('api/stats/top-users');
   return response.data;
 };
 
-export const getTimeUntilNextWord = async () => {
-  const response = await api.get('/api/words/next-word-time');
-  return response.data.timeRemaining;
-};
-
 export const getPopularWords = async () => {
-  const response = await api.get('/api/stats/popular-words');
+  const response = await api.get('api/stats/popular-words');
   return response.data;
 };
 
