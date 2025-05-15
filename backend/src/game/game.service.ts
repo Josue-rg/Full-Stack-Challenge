@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan, Equal } from 'typeorm';
+import { Repository} from 'typeorm';
 import { Game } from '../entities/game.entity';
 import { Attempt } from '../entities/attempt.entity';
 import { Win } from '../entities/win.entity';
@@ -17,112 +17,50 @@ export class GameService {
     @InjectRepository(Word) private wordRepo: Repository<Word>,
   ) {}
 
-  
-  async getCurrentActiveWord() {
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const activeWord = await this.wordRepo.findOne({
-      where: { used: true, usedAt: MoreThan(fiveMinutesAgo) },
-      order: { usedAt: 'DESC' }
-    });
-
-    return activeWord;
-  }
-
   async startGame(userId: string): Promise<{
     gameId?: number;
     message?: string;
     wordLength?: number;
     currentWord?: string;
   }> {
-    const activeWord = await this.getCurrentActiveWord();
-    
-    if (activeWord) {
-      const game = this.gameRepo.create({
-        userId: userId.toString(),
-        word: activeWord,
-        completed: false,
-        won: false,
-        attempts: []
-      });
-      const savedGame = await this.gameRepo.save(game);
-      console.log("palbra", savedGame.word)
-      return {
-        gameId: savedGame.id,
-        wordLength: savedGame.word.word.length,
-        currentWord: savedGame.word.word.toUpperCase()
-      };
-    }
-
-    const allWords = await this.wordRepo.find({
-      where: { used: false }
-    });
     const wonWords = await this.winRepo.find({ 
       where: { user: { id: userId } as any },
       relations: ['word', 'user']
     });
-    const wonWordTexts = wonWords.map(win => win.word.word);
-    const availableWords = allWords.filter(word => !wonWordTexts.includes(word.word));
+    const wonWordIds = wonWords.map(win => win.word.id);
     
-    if (availableWords.length === 0) {
-      const refreshedWords = await this.wordRepo.find({
-        where: { used: false }
-      });
-      
-      if (refreshedWords.length === 0) {
-        return {
-          gameId: undefined,
-          message: 'Lo sentimos, no hay más palabras disponibles por ahora. ¡Vuelve pronto!'
-        };
-      }
-      
-      const selectedWord = refreshedWords[Math.floor(Math.random() * refreshedWords.length)];
-      console.log(`🎲 PALABRA PARA ADIVINAR: ${selectedWord.word}`);
-      selectedWord.used = true;
-      selectedWord.usedAt = new Date();
-      await this.wordRepo.save(selectedWord);
-      
-      const game = this.gameRepo.create({
-        userId: userId.toString(),
-        word: selectedWord,
-        completed: false,
-        won: false,
-        attempts: []
-      });
-      
-      const savedGame = await this.gameRepo.save(game);
+    const availableWord = await this.wordRepo
+      .createQueryBuilder('word')
+      .where(wonWordIds.length > 0 ? 'word.id NOT IN (:...wonWordIds)' : '1=1', { wonWordIds })
+      .orderBy('RANDOM()')
+      .getOne();
+
+    if (!availableWord) {
       return {
-        gameId: savedGame.id,
-        wordLength: savedGame.word.word.length,
-        currentWord: savedGame.word.word.toUpperCase()
+        gameId: undefined,
+        message: 'Lo sentimos, ya has adivinado todas las palabras disponibles. ¡Vuelve pronto!'
       };
     }
-    
-    const selectedWord = availableWords[Math.floor(Math.random() * availableWords.length)];
-    
-    console.log(`🎲 PALABRA PARA ADIVINAR: ${selectedWord.word.toUpperCase()}`);
-    
-    selectedWord.used = true;
-    selectedWord.usedAt = new Date();
-    await this.wordRepo.save(selectedWord);
+
+    console.log('Palabra a adivinar:', availableWord.word.toUpperCase());
+
     const game = this.gameRepo.create({
       userId: userId.toString(),
-      word: selectedWord,
+      word: availableWord,
       completed: false,
       won: false,
       attempts: []
     });
     
     const savedGame = await this.gameRepo.save(game);
-    console.log(`🎲 Palabra seleccionada: ${savedGame.word.word.toUpperCase()}`);
     return {
       gameId: savedGame.id,
       wordLength: savedGame.word.word.length,
       currentWord: savedGame.word.word.toUpperCase()
     };
-  }
+}
 
-  async checkAttempt(gameId: number, attemptWord: string) {
-
+async checkAttempt(gameId: number, attemptWord: string) {
     const game = await this.gameRepo.findOne({
       where: { id: gameId },
       relations: ['word', 'attempts']
@@ -131,12 +69,6 @@ export class GameService {
     if (!game) {
       console.error('Juego no encontrado:', gameId);
       throw new Error('Game not found');
-    }
-
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    if (game.word.usedAt < fiveMinutesAgo) {
-      console.error('Palabra expirada:', game.word.word);
-      throw new Error('Word has expired. Start a new game.');
     }
 
     if (attemptWord.length !== 5) {
@@ -182,23 +114,29 @@ export class GameService {
     }
     game.attempts.push(attemptRecord);
     
-    // Primero verificar si ganó
-    if (isWon) {
-      game.completed = true;
-      game.won = true;
-      
-      // Crear registro de victoria
-      const user = await this.userRepo.findOne({ where: { id: game.userId } });
-      if (user) {
-        const winRecord = this.winRepo.create({
-          user,
-          word: game.word
-        });
-        await this.winRepo.save(winRecord);
+    const user = await this.userRepo.findOne({ where: { id: game.userId } });
+    
+    if (user) {
+      if (isWon || game.attempts.length >= 5) {
+        user.totalGames += 1;
+        
+        if (isWon) {
+          user.totalWins += 1;
+          game.completed = true;
+          game.won = true;
+          
+          const winRecord = this.winRepo.create({
+            user,
+            word: game.word
+          });
+          await this.winRepo.save(winRecord);
+        } else if (game.attempts.length >= 5) {
+          game.completed = true;
+          game.won = false;
+        }
+        
+        await this.userRepo.save(user);
       }
-    } else if (game.attempts.length >= 5) {
-      game.completed = true;
-      game.won = false;
     }
 
     await this.attemptRepo.save(attemptRecord);

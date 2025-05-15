@@ -23,7 +23,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      // Recuperar la información del usuario del token
       try {
         const tokenData = JSON.parse(atob(token.split('.')[1]));
         setUser({

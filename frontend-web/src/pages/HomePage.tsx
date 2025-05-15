@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import WordleGame from '../components/WordleGame';
 import GlobalTops from '../components/GlobalTops';
 import UserStats from '../components/UserStats';
+import { UpdateProvider } from '../context/UpdateContext';
 
 const HomePage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -25,9 +26,6 @@ const HomePage: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center">
-              <span className="text-white mr-4">
-                Hola, {user?.username}
-              </span>
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-md text-white bg-purple-700 hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-400 transition"
@@ -43,18 +41,23 @@ const HomePage: React.FC = () => {
         <main>
           <div className="mx-auto">
             <div className="px-4 sm:px-0">
-              <div className="flex flex-col md:flex-row gap-4 items-start justify-center w-full">
-                <div className="flex-1 flex justify-center"><GlobalTops /></div>
-                <div className="flex-1 flex justify-center"><div className="bg-purple-900 rounded-3xl p-4 border w-full max-w-lg"><WordleGame /></div></div>
-                <div className="flex-1 flex justify-center"><UserStats /></div>
-              </div>
+              <UpdateProvider>
+                <div className="flex flex-col md:flex-row gap-4 items-start justify-center w-full">
+                  <div className="flex-1 flex justify-center"><GlobalTops /></div>
+                  <div className="flex-1 flex justify-center">
+                    <div className="bg-purple-900 rounded-3xl p-4 border w-full max-w-lg">
+                      <WordleGame />
+                    </div>
+                  </div>
+                  <div className="flex-1 flex justify-center"><UserStats /></div>
+                </div>
+              </UpdateProvider>
             </div>
           </div>
         </main>
       </div>
     </div>
   );
-  
 };
 
 export default HomePage;

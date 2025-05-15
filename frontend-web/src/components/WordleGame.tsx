@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { gameService } from '../services/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useUpdate } from '../context/UpdateContext';
 
 interface LetterFeedback {
   letter: string;
@@ -108,8 +109,8 @@ const WordleGame = () => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [showGame, setShowGame] = useState(false);
   const [gameId, setGameId] = useState<number | null>(null);
+  const { triggerUpdate } = useUpdate();
 
-  // Temporizador para el juego
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
     
@@ -127,7 +128,6 @@ const WordleGame = () => {
       }, 1000);
     }
 
-    // Limpiar el intervalo cuando el componente se desmonte o el juego termine
     return () => {
       if (intervalId) {
         clearInterval(intervalId);
@@ -180,9 +180,11 @@ const WordleGame = () => {
         setSuccess(true);
         toast.success('¡Felicidades! ¡Has ganado!');
         setShowGame(false);
+        triggerUpdate();
       } else if (response.gameCompleted && !response.isWon) {
         toast.error('¡Game Over! Se acabaron los intentos');
         setShowGame(false);
+        triggerUpdate();
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error al validar la palabra');

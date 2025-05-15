@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getUserStats } from '../services/api';
+import { useUpdate } from '../context/UpdateContext';
 
 interface UserStatsData {
   totalGames: number;
@@ -10,6 +11,7 @@ const UserStats: React.FC = () => {
   const [stats, setStats] = useState<UserStatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { updateCounter } = useUpdate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -29,7 +31,7 @@ const UserStats: React.FC = () => {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [updateCounter]);
 
   if (loading) return <div>Cargando estadísticas...</div>;
 

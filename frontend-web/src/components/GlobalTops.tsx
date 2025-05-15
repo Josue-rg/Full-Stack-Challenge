@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getTopPlayers, getPopularWords } from '../services/api';
+import { useUpdate } from '../context/UpdateContext';
 
 interface Player {
   user_username: string;
@@ -16,6 +17,7 @@ const GlobalTops = () => {
   const [words, setWords] = useState<PopularWord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const { updateCounter } = useUpdate();
 
   useEffect(() => {
     let isMounted = true;
@@ -27,6 +29,7 @@ const GlobalTops = () => {
     const fetchData = async () => {
       try {
         const playersData = await getTopPlayers();
+        console.log('Datos de jugadores:', playersData);
         if (isMounted) {
           if ('message' in playersData) {
             setPlayers([]);
@@ -54,7 +57,7 @@ const GlobalTops = () => {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, []);
+  }, [updateCounter]);
 
   if (loading) return <div>Cargando tops mundiales...</div>;
   if (error) return <div className="text-red-500">{error}</div>;

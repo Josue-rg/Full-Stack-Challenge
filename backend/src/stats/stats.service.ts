@@ -26,6 +26,7 @@ export class StatsService {
   async getTopUsers(): Promise<{ username: string; totalWins: number }[]> {
     return this.userRepo.createQueryBuilder('user')
       .select(['user.username', 'user.totalWins'])
+      .where('user.totalWins > 0')
       .orderBy('user.totalWins', 'DESC')
       .limit(10)
       .getRawMany();
