@@ -51,7 +51,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (username: string, password: string) => {
-    try {
       const data = await authService.login(username, password);
       await AsyncStorage.setItem('token', data.access_token);
       setUser({
@@ -59,10 +58,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         username: data.username,
       });
       navigation.navigate('Home');
-    } catch (error) {
-      console.error('Error', error);
-      throw error;
-    }
   };
 
   const register = async (username: string, password: string) => {

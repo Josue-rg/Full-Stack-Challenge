@@ -10,9 +10,9 @@ interface LetterFeedback {
 }
 
 const getBgColor = (value: number) => {
-  if (value === 1) return '#22c55e'; // verde
-  if (value === 2) return '#facc15'; // amarillo
-  return '#d1d5db'; // gris
+  if (value === 1) return '#22c55e';
+  if (value === 2) return '#facc15';
+  return '#d1d5db';
 };
 
 const WordleGrid: React.FC<{ attempts: LetterFeedback[][] }> = ({ attempts }) => {

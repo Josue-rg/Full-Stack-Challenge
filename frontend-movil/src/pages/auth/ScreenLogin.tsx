@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+import { authService } from '../../services/api';
 
 
 const LoginPage = () => {
@@ -25,10 +26,9 @@ const LoginPage = () => {
     
     try {
       await login(username, password);
-    } catch {
+    } catch (error) {
       Toast.show({
         type: 'error',
-        text1: 'Error',
         text2: 'Credenciales incorrectas',
         position: 'top',
         visibilityTime: 2000,

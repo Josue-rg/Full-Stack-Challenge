@@ -1,6 +1,10 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+//ip de la red, las miam que estan lso dos conectados, puerto simepre 3000 esto apra correrlo en expo
+//sino pues localhost para correrlo en el navegador
 const API_URL = 'http://localhost:3000';
+
 
 const api = axios.create({
   baseURL: API_URL,
@@ -72,17 +76,17 @@ export const gameService = {
   },
 
   getStats: async () => {
-    const response = await api.get('api/games/stats');
+    const response = await api.get('api/stats/games');
     return response.data;
   },
 
   getTopPlayers: async () => {
-    const response = await api.get('api/games/top-players');
+    const response = await api.get('api/stats/top-users');
     return response.data;
   },
 
   getMostGuessedWords: async () => {
-    const response = await api.get('api/games/most-guessed-words');
+    const response = await api.get('api/stats/popular-words');
     return response.data;
   }
 };
