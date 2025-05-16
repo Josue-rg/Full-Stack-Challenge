@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
+
 
 const LoginPage = () => {
   const [username, setUsername] = useState('');
@@ -11,14 +13,27 @@ const LoginPage = () => {
 
   const handleSubmit = async () => {
     if (!username.trim() || !password.trim()) {
-      console.error('Por favor, completa todos los campos');
+      Toast.show({
+          type: 'info',
+          text2: 'Por favor, completa todos los campos',
+          position: 'top',
+          visibilityTime: 2000,
+          topOffset: 50,
+        });
       return;
     }
     
     try {
       await login(username, password);
     } catch {
-      console.error('Credenciales incorrectas');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Credenciales incorrectas',
+        position: 'top',
+        visibilityTime: 2000,
+        topOffset: 50,
+      });
     }
   };
 
@@ -55,6 +70,7 @@ const LoginPage = () => {
           </Text>
         </TouchableOpacity>
       </View>
+      <Toast />
     </View>
   );
 };
@@ -104,7 +120,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   loginButton: {
-    backgroundColor: '#4C1D95', // bg-purple-900
+    backgroundColor: '#4C1D95',
     borderRadius: 6,
     padding: 12,
     alignItems: 'center',

@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { authService } from '../../services/api';
+import Toast from 'react-native-toast-message';
 
 interface User {
   id: string;
@@ -15,6 +16,7 @@ const ScreenRegister = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const { register } = useAuth();
+  const navigation = useNavigation();
 
   useEffect(() => {
     const getAllUsers = async () => {
@@ -30,22 +32,46 @@ const ScreenRegister = () => {
 
   const handleSubmit = async () => {
     if (!username.trim() || !password.trim() || !confirmPassword.trim()) {
-      console.error('Completa todos los campos');
+      Toast.show({
+        type: 'info',
+        text2: 'Por favor, completa todos los campos',
+        position: 'top',
+        visibilityTime: 2000,
+        topOffset: 50,
+      });
       return;
     }
 
     if (username.length < 3) {
-      console.error('El username debe tener al menos 3 caracteres');
+      Toast.show({
+        type: 'info',
+        text2: 'El username debe tener al menos 3 caracteres',
+        position: 'top',
+        visibilityTime: 2000,
+        topOffset: 50,
+      });
       return;
     }
 
     if (password.length < 4) {
-      console.error('La contraseña debe tener al menos 4 caracteres');
+      Toast.show({
+        type: 'info',
+        text2: 'La contraseña debe tener al menos 4 caracteres',
+        position: 'top',
+        visibilityTime: 2000,
+        topOffset: 50,
+      });
       return;
     }
 
     if (password !== confirmPassword) {
-      console.error('Las contraseñas no coinciden');
+      Toast.show({
+        type: 'error',
+        text2: 'Las contraseñas no coinciden',
+        position: 'top',
+        visibilityTime: 2000,
+        topOffset: 50,
+      });
       return;
     }
 
@@ -54,18 +80,38 @@ const ScreenRegister = () => {
     );
     
     if (userExists) {
-      console.error('El nombre de usuario ya está en uso');
+      Toast.show({
+        type: 'error',
+        text2: 'El nombre de usuario ya está en uso',
+        position: 'top',
+        visibilityTime: 2000,
+        topOffset: 50,
+      });
       return;
     }
     
     try {
       await register(username, password);
-      console.log('¡Cuenta creada exitosamente!');
+      Toast.show({
+        type: 'success',
+        text1: 'Éxito',
+        text2: '¡Cuenta creada exitosamente!',
+        position: 'top',
+        visibilityTime: 2000,
+        topOffset: 50,
+      });
       setUsername('');
       setPassword('');
       setConfirmPassword('');
-    } catch {
-      return;
+    } catch (e) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Error al crear la cuenta',
+        position: 'top',
+        visibilityTime: 2000,
+        topOffset: 50,
+      });
     }
   };
 
@@ -110,6 +156,7 @@ const ScreenRegister = () => {
           </Text>
         </TouchableOpacity>
       </View>
+      <Toast />
     </View>
   );
 };
@@ -123,7 +170,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   formContainer: {
-    backgroundColor: '#4',
+    backgroundColor: '#4C1D95',
     padding: 32,
     borderRadius: 12,
     width: '100%',
