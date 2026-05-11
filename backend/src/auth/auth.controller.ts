@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Param } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('api/auth')
@@ -18,5 +18,10 @@ export class AuthController {
   @Get('users')
   async getAllUsers() {
     return this.authService.getAllUsers();
+  }
+
+  @Patch('users/:id/role')
+  async updateUserRole(@Param('id') id: string, @Body() body: { role: string }) {
+    return this.authService.updateUserRole(id, body.role);
   }
 }

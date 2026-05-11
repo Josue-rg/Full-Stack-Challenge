@@ -256,7 +256,10 @@ const RegisterPage: React.FC = () => {
                 <div 
                   className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-10 h-2 bg-black/30 rounded-full blur-sm"
                   style={{
-                    animation: `shadow-pulse ${3 + Math.random() * 2}s ease-in-out infinite`,
+                    animationName: 'shadow-pulse',
+                    animationDuration: `${3 + Math.random() * 2}s`,
+                    animationTimingFunction: 'ease-in-out',
+                    animationIterationCount: 'infinite',
                     animationDelay: `${index * 0.1}s`,
                   }}
                 ></div>
@@ -361,7 +364,7 @@ const RegisterPage: React.FC = () => {
                         name="password"
                         type="password"
                         required
-                        className="w-full bg-[#1a1a2e]/80 backdrop-blur-md border border-purple-500/30 text-white placeholder-purple-300/50 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-300 font-medium"
+                        className="w-full bg-[#1a1a2e]/80 backdrop-blur-md border border-purple-500/30 text-gray-100 placeholder-purple-300/50 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-300 font-medium"
                         placeholder="Contraseña"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -383,7 +386,7 @@ const RegisterPage: React.FC = () => {
                         name="confirm-password"
                         type="password"
                         required
-                        className="w-full bg-[#1a1a2e]/80 backdrop-blur-md border border-purple-500/30 text-white placeholder-purple-300/50 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-300 font-medium"
+                        className="w-full bg-[#1a1a2e]/80 backdrop-blur-md border border-purple-500/30 text-gray-100 placeholder-purple-300/50 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-300 font-medium"
                         placeholder="Confirmar contraseña"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}

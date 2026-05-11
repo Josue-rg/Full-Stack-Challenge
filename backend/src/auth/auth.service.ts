@@ -33,27 +33,20 @@ export class AuthService {
     try {
       const user = await this.usersRepository.findOne({ where: { username } });
       if (!user) {
-        console.log('Usuario no encontrado');
         throw new BadRequestException('Usuario o contraseña incorrectos');
       }
-
-      console.log('Usuario encontrado:', user.username);
-      console.log('Contraseña ingresada:', password);
-      console.log('Contraseña en base de datos:', user.password);
 
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
-        console.log('Contraseña no válida');
         throw new BadRequestException('Usuario o contraseña incorrectos');
       }
 
-      console.log('Contraseña válida');
-      const payload = { username: user.username, userId: user.id };
+      const payload = { username: user.username, userId: user.id, role: user.role };
       return {
         access_token: this.jwtService.sign(payload),
+        role: user.role,
       };
     } catch (error) {
-      console.error('Error en login:', error);
       throw error;
     }
   }
@@ -77,7 +70,21 @@ export class AuthService {
     const users = await this.usersRepository.find();
     return users.map(user => ({
       id: user.id,
-      username: user.username
+      username: user.username,
+      role: user.role,
+      totalGames: user.totalGames,
+      totalWins: user.totalWins,
+      createdAt: user.createdAt
     }));
+  }
+
+  async updateUserRole(id: string, role: string) {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new BadRequestException('Usuario no encontrado');
+    }
+    user.role = role;
+    await this.usersRepository.save(user);
+    return { message: 'Rol actualizado exitosamente' };
   }
 }

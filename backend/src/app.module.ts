@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { WordsModule } from './words/words.module';
@@ -13,15 +14,22 @@ import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'root',
-      database: 'wordle_db',
-      entities: [Word, Game, Attempt, User, Win],
-      synchronize: true,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        url: configService.get<string>('DB_CONNECTION_STRING'),
+        entities: [Word, Game, Attempt, User, Win],
+        synchronize: true, // Siempre true para desarrollo y producción (ajusta según necesites)
+        ssl: {
+          rejectUnauthorized: false
+        },
+      }),
+      inject: [ConfigService],
     }),
     ScheduleModule.forRoot(),
     WordsModule,

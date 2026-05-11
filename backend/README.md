@@ -1,98 +1,143 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend - Wordle Challenge
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend NestJS para el juego Wordle, configurado con base de datos PostgreSQL en Neon.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Inicio Rápido
 
-## Description
+### Prerrequisitos
+- Node.js (v16 o superior)
+- npm o yarn
+- Conexión a internet (para conectarse a Neon)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+### Instalación y Ejecución
 
 ```bash
-$ npm install
+# 1. Navega al directorio del backend
+cd backend
+
+# 2. Instala dependencias
+npm install
+
+# 3. Copia el archivo de entorno (si no existe)
+cp .env.template .env
+
+# 4. Edita .env y configura:
+#    - DB_CONNECTION_STRING (tu connection string de Neon)
+#    - JWT_SECRET (una clave segura)
+
+# 5. Inicia el servidor de desarrollo
+npm run start:dev
 ```
 
-## Compile and run the project
+El servidor estará disponible en: **http://localhost:3001**
+
+## 📋 Scripts Disponibles
 
 ```bash
-# development
-$ npm run start
+# Desarrollo
+npm run start:dev      # Inicia en modo desarrollo con watch
 
-# watch mode
-$ npm run start:dev
+# Producción
+npm run build          # Compila la aplicación
+npm run start:prod     # Inicia en modo producción
 
-# production mode
-$ npm run start:prod
+# Calidad de código
+npm run lint           # Ejecuta ESLint
+npm run format         # Formatea con Prettier
+
+# Tests
+npm run test           # Ejecuta tests unitarios
+npm run test:watch     # Tests en modo watch
+npm run test:e2e       # Tests end-to-end
 ```
 
-## Run tests
+## 🗄️ Base de Datos
 
-```bash
-# unit tests
-$ npm run test
+Este proyecto usa **Neon PostgreSQL** como base de datos. La BD está en la nube y es compartida entre desarrollo y producción.
 
-# e2e tests
-$ npm run test:e2e
+### Configuración de Neon
 
-# test coverage
-$ npm run test:cov
+1. Crea una cuenta en [neon.tech](https://neon.tech)
+2. Crea un nuevo proyecto
+3. Copia el connection string
+4. Pégalo en tu archivo `.env` como `DB_CONNECTION_STRING`
+
+Lee [SETUP_NEON.md](./SETUP_NEON.md) para instrucciones detalladas.
+
+## 🔧 Variables de Entorno
+
+Crea un archivo `.env` en la raíz del backend con:
+
+```env
+# Conexión a Neon PostgreSQL
+DB_CONNECTION_STRING=postgresql://usuario:password@ep-xxx.region.aws.neon.tech/database?sslmode=require
+
+# Clave secreta para JWT (¡cámbiala en producción!)
+JWT_SECRET=tu_clave_secreta_muy_segura
+
+# Puerto del servidor
+PORT=3001
+
+# Entorno (development/production)
+NODE_ENV=development
 ```
 
-## Deployment
+## 📁 Estructura del Proyecto
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```
+backend/
+├── src/
+│   ├── auth/           # Autenticación y autorización
+│   ├── entities/       # Entidades de TypeORM
+│   ├── game/           # Módulo del juego
+│   ├── stats/          # Módulo de estadísticas
+│   ├── words/          # Módulo de palabras
+│   ├── app.module.ts   # Módulo principal
+│   └── main.ts         # Punto de entrada
+├── test/               # Tests
+├── .env                # Variables de entorno (NO subir al repo)
+├── .env.template       # Plantilla de variables
+└── package.json
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 🔐 Seguridad
 
-## Resources
+- **Nunca** subas el archivo `.env` al repositorio
+- Cambia `JWT_SECRET` antes de producción
+- Usa HTTPS en producción
+- Mantén tu connection string de Neon en secreto
 
-Check out a few resources that may come in handy when working with NestJS:
+## 🚨 Solución de Problemas
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Puerto ya en uso
+Si ves `EADDRINUSE: address already in use :::3000`, el puerto 3000 está ocupado. Este proyecto usa el puerto **3001** por defecto.
 
-## Support
+### Error de conexión a BD
+- Verifica tu connection string de Neon
+- Asegúrate de tener conexión a internet
+- Revisa que tu proyecto Neon esté activo
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Error de SSL
+La configuración ya incluye SSL para Neon. No debería haber problemas.
 
-## Stay in touch
+## 📚 Recursos Adicionales
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- [Documentación de NestJS](https://docs.nestjs.com)
+- [Documentación de TypeORM](https://typeorm.io)
+- [Documentación de Neon](https://neon.tech/docs)
+- [SETUP_NEON.md](./SETUP_NEON.md) - Guía detallada de configuración
 
-## License
+## 🤝 Contribución
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+1. Crea una rama para tu feature
+2. Haz commit de tus cambios
+3. Haz push a la rama
+4. Crea un Pull Request
+
+## 📄 Licencia
+
+Este proyecto es privado y propietario.
+
+---
+
+**Nota**: Para desarrollo local, el backend se conecta a la BD en Neon (nube). No se requiere PostgreSQL local.

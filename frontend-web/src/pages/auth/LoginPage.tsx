@@ -236,7 +236,10 @@ const LoginPage: React.FC = () => {
                 <div 
                   className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-10 h-2 bg-black/30 rounded-full blur-sm"
                   style={{
-                    animation: `shadow-pulse ${3 + Math.random() * 2}s ease-in-out infinite`,
+                    animationName: 'shadow-pulse',
+                    animationDuration: `${3 + Math.random() * 2}s`,
+                    animationTimingFunction: 'ease-in-out',
+                    animationIterationCount: 'infinite',
                     animationDelay: `${index * 0.1}s`,
                   }}
                 ></div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getUserStats } from '../services/api';
+import api from '../services/api';
 import { useUpdate } from '../context/UpdateContext';
 import { motion } from 'framer-motion';
 
@@ -15,23 +15,29 @@ const UserStats: React.FC = () => {
   const { updateCounter } = useUpdate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('No token found');
-      setLoading(false);
-      return;
-    }
-
-    getUserStats()
-      .then(data => {
-        setStats(data);
-      })
-      .catch(error => {
-        setError(error.message);
-      })
-      .finally(() => {
+    const fetchStats = async () => {
+      try {
+        const [gamesRes, winsRes] = await Promise.all([
+          api.get('api/stats/games'),
+          api.get('api/stats/wins')
+        ]);
+        setStats({
+          totalGames: gamesRes.data.totalGames,
+          totalWins: winsRes.data.totalWins
+        });
+      } catch (err: any) {
+        // Silently handle errors when not authenticated
+        if (err.response?.status === 401) {
+          setStats({ totalGames: 0, totalWins: 0 });
+        } else {
+          setError(err.message || 'Error al cargar estadísticas');
+        }
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchStats();
   }, [updateCounter]);
 
   if (loading) {
