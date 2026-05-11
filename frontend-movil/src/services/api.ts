@@ -1,9 +1,9 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-//ip de la red, las miam que estan lso dos conectados, puerto simepre 3000 esto apra correrlo en expo
+//ip de la red, las miam que estan lso dos conectados, puerto simepre 3001 esto apra correrlo en expo
 //sino pues localhost para correrlo en el navegador
-const API_URL = 'http://localhost:3000';
+const API_URL = 'http://localhost:3001';
 
 
 const api = axios.create({

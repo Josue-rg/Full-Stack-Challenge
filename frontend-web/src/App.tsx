@@ -24,7 +24,7 @@ function App() {
       </AuthProvider>
 
       <ToastContainer
-        position="top-right"
+        position="top-center"
         autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
@@ -33,7 +33,7 @@ function App() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="light"
+        theme="dark"
       />
     </Router>
   )

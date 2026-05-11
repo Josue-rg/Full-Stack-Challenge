@@ -3,6 +3,7 @@ import { gameService } from '../services/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useUpdate } from '../context/UpdateContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface LetterFeedback {
   letter: string;
@@ -14,24 +15,34 @@ interface WordleGridProps {
 }
 
 const getBgColor = (value: number) => {
-  if (value === 1) return 'bg-green-500 text-white';
-  if (value === 2) return 'bg-yellow-400 text-white';
-  return 'bg-gray-300 text-gray-800';
+  if (value === 1) return 'from-green-500 to-emerald-600 text-white border-green-400';
+  if (value === 2) return 'from-yellow-500 to-orange-500 text-white border-yellow-400';
+  return 'from-gray-700 to-gray-800 text-gray-300 border-gray-600';
 };
 
 const WordleGrid: React.FC<WordleGridProps> = ({ attempts }) => {
   const rows = Array.from({ length: 5 }, (_, i) => attempts[i] || Array.from({ length: 5 }, () => ({ letter: '', value: 0 })));
+  
   return (
-    <div className="grid grid-rows-5 gap-2">
+    <div className="grid grid-rows-5 gap-2 p-2">
       {rows.map((row, i) => (
-        <div key={i} className="flex gap-2">
+        <div key={i} className="flex gap-2 justify-center">
           {row.map((cell, j) => (
-            <div
+            <motion.div
               key={j}
-              className={`w-12 h-12 flex items-center justify-center border rounded text-2xl font-bold ${getBgColor(cell.value)}`}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ 
+                scale: cell.letter ? 1 : 0.8, 
+                opacity: cell.letter ? 1 : 0.5 
+              }}
+              transition={{ delay: cell.letter ? j * 0.1 : 0 }}
+              className={`w-14 h-14 flex items-center justify-center border-2 rounded-xl text-2xl font-black bg-gradient-to-br shadow-lg ${getBgColor(cell.value)}`}
+              style={{
+                textShadow: cell.value > 0 ? '0 0 10px rgba(255,255,255,0.5)' : 'none',
+              }}
             >
               {cell.letter}
-            </div>
+            </motion.div>
           ))}
         </div>
       ))}
@@ -45,7 +56,20 @@ interface AttemptsLeftProps {
 }
 
 const AttemptsLeft: React.FC<AttemptsLeftProps> = ({ attempts, max }) => (
-  <div className="text-gray-100">Intentos restantes: {max - attempts}</div>
+  <div className="flex items-center gap-2">
+    <span className="text-purple-300/80 text-sm font-medium">Intentos restantes:</span>
+    <div className="flex gap-1">
+      {Array.from({ length: max - attempts }, (_, i) => (
+        <motion.div
+          key={i}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: i * 0.1 }}
+          className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
+        />
+      ))}
+    </div>
+  </div>
 );
 
 interface WordInputProps {
@@ -68,25 +92,37 @@ const WordInput: React.FC<WordInputProps> = ({ value, onChange, onSubmit, disabl
   };
 
   return (
-    <div className="flex flex-col gap-2 items-center">
-      <input
-        type="text"
-        className="border rounded px-4 py-2 text-xl uppercase tracking-widest text-center"
-        value={value}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        maxLength={5}
-        disabled={disabled}
-        placeholder="Escribe tu palabra"
-        autoFocus
-      />
-      <button
+    <div className="flex flex-col gap-3 items-center w-full max-w-xs">
+      <div className="relative w-full transition-transform duration-300 focus-within:scale-[1.02]">
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-xl blur opacity-30 group-focus-within:opacity-60 transition-opacity duration-500 animate-gradient-xy"></div>
+        <input
+          type="text"
+          className="relative w-full bg-[#1a1a2e]/90 backdrop-blur-md border border-purple-500/30 text-white placeholder-purple-300/50 rounded-xl px-4 py-3 text-xl uppercase tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 font-bold"
+          value={value}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          maxLength={5}
+          disabled={disabled}
+          placeholder="Escribe tu palabra"
+          autoFocus
+        />
+      </div>
+      
+      <motion.button
         onClick={onSubmit}
         disabled={disabled}
-        className="bg-white text-blhack px-4 py-2 rounded hover:bg-purple-800 disabled:opacity-50"
+        className="relative group overflow-hidden rounded-xl w-full"
+        whileHover={{ scale: disabled ? 1 : 1.02 }}
+        whileTap={{ scale: disabled ? 1 : 0.98 }}
       >
-        Enviar
-      </button>
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 animate-gradient-xy"></div>
+        <div className="relative bg-transparent text-white font-black py-3 px-6 rounded-xl border border-white/20 flex items-center justify-center gap-2 disabled:opacity-50">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span>ENVIAR</span>
+        </div>
+      </motion.button>
     </div>
   );
 };
@@ -199,40 +235,109 @@ const WordleGame = () => {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      {loading ? (
-        <div className="loading-spinner">Cargando...</div>
-      ) : !showGame ? (
-        <div className="flex flex-col items-center gap-4">
-          <h2 className="text-white text-2xl mb-4">¡Hola!, jugemos!!!</h2>
-          <button
-            onClick={handleStartGame}
-            className="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition-colors text-xl font-bold"
-            disabled={loading}
+    <div className="flex flex-col items-center gap-6 p-4">
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center gap-4"
           >
-            {loading ? 'Iniciando...' : 'JUGAR'}
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="text-white font-bold text-lg mb-2">
-            Siguiente palabra en: <span className="font-mono">{formatTime(timeLeft)}</span>
-          </div>
-          <WordleGrid attempts={attempts} />
-          {attemptsCount < MAX_ATTEMPTS && !success && (
-            <>
-              <AttemptsLeft attempts={attemptsCount} max={MAX_ATTEMPTS} />
-              <WordInput
-                value={currentWord}
-                onChange={handleInput}
-                onSubmit={handleGuess}
-                disabled={loading || success}
-              />
-            </>
-          )}
-        </>
-      )}
-      <ToastContainer position="top-center" theme="dark" />
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-purple-500/30 rounded-full"></div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-t-purple-500 rounded-full animate-spin"></div>
+            </div>
+            <span className="text-purple-300/80 font-medium">Cargando...</span>
+          </motion.div>
+        ) : !showGame ? (
+          <motion.div
+            key="start"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="flex flex-col items-center gap-6"
+          >
+            <div className="text-center">
+              <motion.h2 
+                className="text-white text-3xl font-black mb-2"
+                style={{ textShadow: '0 0 30px rgba(139,92,246,0.5)' }}
+              >
+                ¡Hola!, jugemos!!!
+              </motion.h2>
+              <p className="text-purple-300/60 text-sm">Adivina la palabra en 5 intentos</p>
+            </div>
+            
+            <motion.button
+              onClick={handleStartGame}
+              disabled={loading}
+              className="relative group overflow-hidden rounded-2xl"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 animate-gradient-xy"></div>
+              <div className="relative bg-transparent text-white font-black py-4 px-12 rounded-2xl border border-white/20 flex items-center justify-center gap-2 text-xl">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{loading ? 'Iniciando...' : 'JUGAR'}</span>
+              </div>
+            </motion.button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="game"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="flex flex-col items-center gap-6 w-full"
+          >
+            {/* Timer */}
+            <motion.div 
+              className="flex items-center gap-3 bg-[#1a1a2e]/80 backdrop-blur-md px-6 py-3 rounded-xl border border-purple-500/20"
+              animate={{ 
+                borderColor: timeLeft < 60000 ? 'rgba(239,68,68,0.5)' : 'rgba(139,92,246,0.2)',
+              }}
+            >
+              <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-purple-300/80 font-medium">Tiempo:</span>
+              <span className={`font-mono text-xl font-bold ${timeLeft < 60000 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
+                {formatTime(timeLeft)}
+              </span>
+            </motion.div>
+
+            {/* Game Grid */}
+            <WordleGrid attempts={attempts} />
+            
+            {/* Attempts Left & Input */}
+            {attemptsCount < MAX_ATTEMPTS && !success && (
+              <motion.div 
+                className="flex flex-col items-center gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <AttemptsLeft attempts={attemptsCount} max={MAX_ATTEMPTS} />
+                <WordInput
+                  value={currentWord}
+                  onChange={handleInput}
+                  onSubmit={handleGuess}
+                  disabled={loading || success}
+                />
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <ToastContainer 
+        position="top-center" 
+        theme="dark"
+        toastClassName="bg-[#0f0f1a] border border-purple-500/30 text-white"
+        progressClassName="bg-gradient-to-r from-purple-500 to-pink-500"
+      />
     </div>
   );
 };

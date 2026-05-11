@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API_URL = 'http://localhost:3000';
+const API_URL = 'http://localhost:3001';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -105,6 +105,18 @@ export const getTopPlayers = async () => {
 export const getPopularWords = async () => {
   const response = await api.get('api/stats/popular-words');
   return response.data;
+};
+
+export const wordService = {
+  addWord: async (word: string) => {
+    const response = await api.post('api/words', { word });
+    return response.data;
+  },
+  
+  getAllWords: async () => {
+    const response = await api.get('api/words');
+    return response.data;
+  }
 };
 
 export default api;
